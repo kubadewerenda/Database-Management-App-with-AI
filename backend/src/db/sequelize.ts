@@ -89,8 +89,15 @@ export class Orm {
                 const href = pathToFileURL(f).href
                 try{
                     return { file: f, mod: await import(href) }
-                }catch(e){
-                    logger.error({ file: f, e }, 'Failed to import model file')
+                }catch(e: any){
+                    logger.error({
+                        file: f,
+                        name: e?.name,
+                        message: e?.message,
+                        stack: e?.stack,
+                        cause: e?.cause,
+                        keys: e ? Object.keys(e) : null,
+                    }, 'Failed to import model file')
                     return null
                 }
             }
