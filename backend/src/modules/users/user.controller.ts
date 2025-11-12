@@ -45,8 +45,9 @@ class UserController extends Controller{
 
     private async register(req: Request, res: Response){
         try {
-            const data = registerSchema.parse(req.body)
-            const { user, accessToken } = await this.userService.register(data)
+            const data = registerSchema.safeParse(req.body)
+            if(!data.success) throw data.error
+            const { user, accessToken } = await this.userService.register(data.data)
 
             this._login_user(res, accessToken)
 
@@ -58,8 +59,9 @@ class UserController extends Controller{
 
     private async login(req: Request, res: Response){
         try {
-            const data = loginschema.parse(req.body)
-            const { user, accessToken } = await this.userService.login(data)
+            const data = loginschema.safeParse(req.body)
+            if(!data.success) throw data.error
+            const { user, accessToken } = await this.userService.login(data.data)
 
             this._login_user(res, accessToken)
             return res.status(201).json({ user })
@@ -76,7 +78,7 @@ class UserController extends Controller{
             path: '/',
             expires: new Date(0),
         })
-        return res.json({ ok: true })
+        return res.status(200).json({ message: 'Signed out.' })
     }
 
     private async get_user(req: Request, res: Response){
@@ -85,8 +87,9 @@ class UserController extends Controller{
 
     private async update_user(req: Request, res: Response){
         try {
-            const data = updateUserSchema.parse(req.body)
-            const updatedUser = await this.userService.update_user(req.user?.id, data)
+            const data = updateUserSchema.safeParse(req.body)
+            if(!data.success) throw data.error
+            const updatedUser = await this.userService.update_user(req.user?.id, data.data)
             return res.json({ user: updatedUser })
         } catch (err) {
             return helper.sendError(res, err)
