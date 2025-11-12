@@ -7,8 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "lint": "eslint . --ext .ts",
-    "seed": "tsx src/seeders/default_to_work.seeder.ts"
+    "lint": "eslint . --ext .ts"
   },
   "keywords": [],
   "author": "",
