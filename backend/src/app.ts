@@ -5,7 +5,7 @@ import { registerRequestLogging } from './middlewares/logging.middleware.js'
 import { NotFoundHandler } from './middlewares/notFound.middleware.js'
 import { ErrorHandler } from './middlewares/errorHandler.middleware.js'
 
-// import usersController from './modules/users/user.controller.js'
+import UserController from './modules/users/user.controller.js'
 
 export class App {
     private app: Application
@@ -28,7 +28,7 @@ export class App {
     }
 
     private registerRoutes() {
-        // this.app.use('/users', usersController)
+        this.app.use('/users', UserController)
         
         this.app.use(NotFoundHandler.handle)
     }
