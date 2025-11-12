@@ -50,13 +50,34 @@ export class NotFoundException extends AppError {
     }
 }
 
+export class ForbiddenException extends AppError {
+    constructor(message = 'Resource forbidden' , errorCode?: ErrorCodeEnumType) {
+        super(
+            message,
+            HTTPSTATUS.UNAUTHORIZED,
+            errorCode || ErrorCodeEnum.ACCESS_UNAUTHORIZED
+        )
+    }
+}
+
+export class ConflictException extends AppError {
+    constructor(message = 'Conflicte occured', errorCode?: ErrorCodeEnumType) {
+        super(
+            message,
+            HTTPSTATUS.BAD_REQUEST,
+            errorCode || ErrorCodeEnum.VALIDATION_ERROR
+        )
+    }
+}
+ConflictException
+
 export class BadRequestException extends AppError {
     constructor(message = 'Bad Request', errorCode?: ErrorCodeEnumType) {
         super(
             message,
             HTTPSTATUS.BAD_REQUEST,
             errorCode || ErrorCodeEnum.VALIDATION_ERROR
-        );
+        )
     }
 }
 

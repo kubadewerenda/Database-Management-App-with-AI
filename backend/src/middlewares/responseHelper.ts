@@ -1,5 +1,5 @@
 import { Response } from 'express'
-import { logger } from '../lib/logger'
+import { logger } from '../lib/logger.js'
 
 
 function sendAndLog(res: Response, code: number, err: any){

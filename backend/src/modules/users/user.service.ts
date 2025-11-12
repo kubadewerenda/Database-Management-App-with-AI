@@ -95,7 +95,7 @@ export default class UserService {
                 throw new BadRequestException('Password cannot be changed for this account.')
             }
             const ok = await bcrypt.compare(currentPassword, user.passwordHash)
-            if (!ok) throw new UnauthorizedException('Current password is incorrect.')
+            if (!ok) throw new BadRequestException('Current password is incorrect.')
 
             const hash = await bcrypt.hash(newPassword, 10)
             user.passwordHash = hash

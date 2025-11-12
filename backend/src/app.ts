@@ -5,6 +5,8 @@ import { registerRequestLogging } from './middlewares/logging.middleware.js'
 import { NotFoundHandler } from './middlewares/notFound.middleware.js'
 import { ErrorHandler } from './middlewares/errorHandler.middleware.js'
 
+import cookieParser from 'cookie-parser'
+import { attachUserFromAuth } from './middlewares/users/user.middleware.js'
 import UserController from './modules/users/user.controller.js'
 
 export class App {
@@ -25,10 +27,13 @@ export class App {
         this.app.use(helmet())
         this.app.use(cors({ origin: true, credentials: true }))
         this.app.use(express.json())
+
+        this.app.use(cookieParser())        
+        this.app.use(attachUserFromAuth) 
     }
 
     private registerRoutes() {
-        this.app.use('/users', UserController)
+        this.app.use('/user', UserController)
         
         this.app.use(NotFoundHandler.handle)
     }
