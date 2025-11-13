@@ -113,7 +113,7 @@ export default class UserService {
             const isDifferent = await this._verifyPassword(newPassword, user.passwordHash)
             if (isDifferent) throw new BadRequestException('New password has to be different than the last one.', ErrorCodeEnum.VALIDATION_ERROR) 
                 
-            const hash = await bcrypt.hash(newPassword, 10)
+            const hash = await this._hashPassword(newPassword)
             user.passwordHash = hash
         }
 
