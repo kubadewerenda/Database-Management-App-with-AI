@@ -2,9 +2,11 @@ import { NextFunction, Request, Response } from 'express'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import User from '../../models/users/user.model.js'
 import * as helper from '../responseHelper.js'
+// import { UnauthorizedException } from '../../lib/errors.js'
 
 export async function isAuthenticated(req: Request, res: Response, next: NextFunction){
     if(!req.user){
+        // throw new UnauthorizedException('User not signed in.')
         return helper.sendNotAuthenticated(res, 'Not authenticated')
     }
     return next()
