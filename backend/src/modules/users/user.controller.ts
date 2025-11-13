@@ -1,62 +1,11 @@
 import { Request, Response } from 'express'
-import { z } from 'zod'
 import Controller from '../../controllers/main.controller.js'
 import UserService from './user.service.js'
+
 import { isAuthenticated } from '../../middlewares/users/user.middleware.js'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware.js'
 
-export const registerSchema = z
-    .object({
-        email: z.string().trim().email(),
-        password: z
-            .string()
-            .min(8, 'Password must be at least 8 characters')
-            .max(128, 'Password must be at most 128 characters')
-            .regex( /[a-z]/,
-                'Password must contain at least one lowercase letter')
-            .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-            .regex(
-                /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/,
-                'Password must contain at least one special character'
-            ),
-        passwordCheck: z.string().min(1, 'Both passwords are required.'),
-    })
-    .refine((d) => d.password === d.passwordCheck, {
-        message: 'Passwords must be the same.',
-        path: ['passwordCheck'],
-    })
-
-export const loginSchema = z.object({
-    email: z.string().trim().email(),
-    password: z.string().min(1, 'Password is required'),
-})
-
-export const updateUserSchema = z
-    .object({
-        email: z.string().trim().email().optional(),
-        currentPassword: z.string().min(1).optional(),
-        newPassword: z
-            .string()
-            .min(8, 'Password must be at least 8 characters')
-            .max(128, 'Password must be at most 128 characters')
-            .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-            .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-            .regex(
-                /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/,
-                'Password must contain at least one special character'
-            )
-            .optional(),
-    })
-    .refine(
-        (d) =>
-        !(d.currentPassword || d.newPassword) ||
-        (d.currentPassword && d.newPassword),
-        {
-        message: 'Both passwords are required to change password',
-        path: ['currentPassword'],
-        }
-    )
-
+import { registerSchema, loginSchema, updateUserSchema } from './user.schema.js'
 
 class UserController extends Controller{
     private userService: UserService
