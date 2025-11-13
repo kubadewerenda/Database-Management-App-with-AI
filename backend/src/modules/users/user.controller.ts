@@ -2,10 +2,10 @@ import { Request, Response } from 'express'
 import Controller from '../../controllers/main.controller.js'
 import UserService from './user.service.js'
 
-import { isAuthenticated } from '../../middlewares/users/user.middleware.js'
+import * as userMd from '../../middlewares/users/user.middleware.js'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware.js'
 
-import { registerSchema, loginSchema, updateUserSchema } from './user.schema.js'
+import { registerSchema, loginSchema, updateUserSchema } from './user.validation.js'
 
 class UserController extends Controller{
     private userService: UserService
@@ -67,15 +67,15 @@ class UserController extends Controller{
 
         const updatedUser = await this.userService.update_user(req.user?.id, data.data)
 
-        return res.json({ user: updatedUser })
+        return res.status(200).json({ user: updatedUser })
     }
 
     public routes(): void {
         this.router.post('/register', asyncHandler(this.register.bind(this)))
         this.router.post('/login', asyncHandler(this.login.bind(this)))
-        this.router.post('/logout', isAuthenticated, asyncHandler(this.logout.bind(this)))
-        this.router.get('/me', isAuthenticated, asyncHandler(this.get_user.bind(this)))
-        this.router.patch('/me/update', isAuthenticated, asyncHandler(this.update_user.bind(this)))
+        this.router.post('/logout', userMd.isAuthenticated, asyncHandler(this.logout.bind(this)))
+        this.router.get('/me', userMd.isAuthenticated, asyncHandler(this.get_user.bind(this)))
+        this.router.patch('/me/update', userMd.isAuthenticated, asyncHandler(this.update_user.bind(this)))
     }
 }
 
