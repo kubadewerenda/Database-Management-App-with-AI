@@ -7,7 +7,9 @@ import { ErrorHandler } from './middlewares/errorHandler.middleware.js'
 
 import cookieParser from 'cookie-parser'
 import { attachUserFromAuth } from './middlewares/users/user.middleware.js'
+
 import UserController from './modules/users/user.controller.js'
+import ProjectController from './modules/projects/project.controller.js'
 
 export class App {
     private app: Application
@@ -34,6 +36,7 @@ export class App {
 
     private registerRoutes() {
         this.app.use('/user', UserController)
+        this.app.use('/project', ProjectController)
         
         this.app.use(NotFoundHandler.handle)
     }
