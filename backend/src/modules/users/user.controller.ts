@@ -1,29 +1,62 @@
 import { Request, Response } from 'express'
-import { email, z } from 'zod'
-import * as helper from '../../middlewares/responseHelper.js'
+import { z } from 'zod'
 import Controller from '../../controllers/main.controller.js'
 import UserService from './user.service.js'
 import { isAuthenticated } from '../../middlewares/users/user.middleware.js'
+import { asyncHandler } from '../../middlewares/asyncHandler.middleware.js'
 
+export const registerSchema = z
+    .object({
+        email: z.string().trim().email(),
+        password: z
+            .string()
+            .min(8, 'Password must be at least 8 characters')
+            .max(128, 'Password must be at most 128 characters')
+            .regex( /[a-z]/,
+                'Password must contain at least one lowercase letter')
+            .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+            .regex(
+                /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/,
+                'Password must contain at least one special character'
+            ),
+        passwordCheck: z.string().min(1, 'Both passwords are required.'),
+    })
+    .refine((d) => d.password === d.passwordCheck, {
+        message: 'Passwords must be the same.',
+        path: ['passwordCheck'],
+    })
 
-const registerSchema = z.object({
+export const loginSchema = z.object({
     email: z.string().trim().email(),
-    password: z.string().min(8).max(128),
+    password: z.string().min(1, 'Password is required'),
 })
 
-const loginschema = z.object({
-    email: z.string().trim().email(),
-    password: z.string().min(1)
-})
+export const updateUserSchema = z
+    .object({
+        email: z.string().trim().email().optional(),
+        currentPassword: z.string().min(1).optional(),
+        newPassword: z
+            .string()
+            .min(8, 'Password must be at least 8 characters')
+            .max(128, 'Password must be at most 128 characters')
+            .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+            .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+            .regex(
+                /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/,
+                'Password must contain at least one special character'
+            )
+            .optional(),
+    })
+    .refine(
+        (d) =>
+        !(d.currentPassword || d.newPassword) ||
+        (d.currentPassword && d.newPassword),
+        {
+        message: 'Both passwords are required to change password',
+        path: ['currentPassword'],
+        }
+    )
 
-const updateUserSchema = z.object({
-    email: z.string().trim().email().optional(),
-    currentPassword: z.string().min(1).optional(),
-    newPassword: z.string().min(1).max(128).optional(),
-}).refine(
-    (d) => !(d.currentPassword || d.newPassword) || (d.currentPassword && d.newPassword),
-    { message: 'Both currentPassword and newPassword are required to change password' }
-)
 
 class UserController extends Controller{
     private userService: UserService
@@ -44,30 +77,23 @@ class UserController extends Controller{
     }
 
     private async register(req: Request, res: Response){
-        try {
-            const data = registerSchema.safeParse(req.body)
-            if(!data.success) throw data.error
-            const { user, accessToken } = await this.userService.register(data.data)
+        const data = registerSchema.safeParse(req.body)
+        if(!data.success) throw data.error
 
-            this._login_user(res, accessToken)
+        const { user, accessToken } = await this.userService.register(data.data)
+        await this._login_user(res, accessToken)
 
-            return res.status(201).json({ user })
-        } catch (err) {
-            return helper.sendError(res, err)
-        }
+        return res.status(201).json({ user, accessToken })
     }
 
     private async login(req: Request, res: Response){
-        try {
-            const data = loginschema.safeParse(req.body)
-            if(!data.success) throw data.error
-            const { user, accessToken } = await this.userService.login(data.data)
+        const data = loginSchema.safeParse(req.body)
+        if(!data.success) throw data.error
 
-            this._login_user(res, accessToken)
-            return res.status(201).json({ user })
-        } catch (err) {
-            return helper.sendError(res, err)
-        }
+        const { user, accessToken } = await this.userService.login(data.data)
+        await this._login_user(res, accessToken)
+
+        return res.status(201).json({ user, accessToken })
     }
 
     private async logout(req: Request, res: Response){
@@ -78,6 +104,7 @@ class UserController extends Controller{
             path: '/',
             expires: new Date(0),
         })
+
         return res.status(200).json({ message: 'Signed out.' })
     }
 
@@ -86,22 +113,20 @@ class UserController extends Controller{
     }
 
     private async update_user(req: Request, res: Response){
-        try {
-            const data = updateUserSchema.safeParse(req.body)
-            if(!data.success) throw data.error
-            const updatedUser = await this.userService.update_user(req.user?.id, data.data)
-            return res.json({ user: updatedUser })
-        } catch (err) {
-            return helper.sendError(res, err)
-        }
+        const data = updateUserSchema.safeParse(req.body)
+        if(!data.success) throw data.error
+
+        const updatedUser = await this.userService.update_user(req.user?.id, data.data)
+
+        return res.json({ user: updatedUser })
     }
 
     public routes(): void {
-        this.router.post('/register', this.register.bind(this))
-        this.router.post('/login', this.login.bind(this))
-        this.router.post('/logout', isAuthenticated, this.logout.bind(this))
-        this.router.get('/me', isAuthenticated, this.get_user.bind(this))
-        this.router.patch('/me/update', isAuthenticated, this.update_user.bind(this))
+        this.router.post('/register', asyncHandler(this.register.bind(this)))
+        this.router.post('/login', asyncHandler(this.login.bind(this)))
+        this.router.post('/logout', isAuthenticated, asyncHandler(this.logout.bind(this)))
+        this.router.get('/me', isAuthenticated, asyncHandler(this.get_user.bind(this)))
+        this.router.patch('/me/update', isAuthenticated, asyncHandler(this.update_user.bind(this)))
     }
 }
 
