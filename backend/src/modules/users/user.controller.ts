@@ -7,15 +7,15 @@ import { asyncHandler } from '../../middlewares/asyncHandler.middleware.js'
 
 import { registerSchema, loginSchema, updateUserSchema } from './user.validation.js'
 
-class UserController extends Controller{
+class UserController extends Controller {
     private userService: UserService
 
-    constructor(){
+    constructor() {
         super()
         this.userService = new UserService()
     }
 
-    private async _login_user(res: Response, accessToken: string){
+    private async _login_user(res: Response, accessToken: string) {
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
             sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
@@ -25,7 +25,7 @@ class UserController extends Controller{
         })
     }
 
-    private async register(req: Request, res: Response){
+    private async register(req: Request, res: Response) {
         const data = registerSchema.safeParse(req.body)
         if(!data.success) throw data.error
 
@@ -35,7 +35,7 @@ class UserController extends Controller{
         return res.status(201).json({ user, accessToken })
     }
 
-    private async login(req: Request, res: Response){
+    private async login(req: Request, res: Response) {
         const data = loginSchema.safeParse(req.body)
         if(!data.success) throw data.error
 
@@ -45,7 +45,7 @@ class UserController extends Controller{
         return res.status(201).json({ user, accessToken })
     }
 
-    private async logout(req: Request, res: Response){
+    private async logout(req: Request, res: Response) {
         res.cookie('accessToken', '', {
             httpOnly: true,
             sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
@@ -57,11 +57,11 @@ class UserController extends Controller{
         return res.status(200).json({ message: 'Signed out.' })
     }
 
-    private async get_user(req: Request, res: Response){
+    private async get_user(req: Request, res: Response) {
         return res.json({ user: req.user || null })
     }
 
-    private async update_user(req: Request, res: Response){
+    private async update_user(req: Request, res: Response) {
         const data = updateUserSchema.safeParse(req.body)
         if(!data.success) throw data.error
 
