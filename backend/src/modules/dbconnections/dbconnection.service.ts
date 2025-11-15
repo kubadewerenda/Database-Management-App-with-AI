@@ -10,7 +10,7 @@ type UpsertConnectionData = {
 }
 
 export default class DbConnectionService {
-    private _parse_connection_string(conn: string){
+    private _parse_connection_string(conn: string) {
         let url: URL
         try {
             url = new URL(conn)
@@ -18,7 +18,7 @@ export default class DbConnectionService {
             throw new BadRequestException('Invalid connection string.')
         }
 
-        if(!['postgres:', 'postgresql:'].includes(url.protocol)){
+        if(!['postgres:', 'postgresql:'].includes(url.protocol)) {
             throw new BadRequestException('Connection string must have postgres:// or postgresql:// protocol.')
         }
 
@@ -28,14 +28,14 @@ export default class DbConnectionService {
         const port = url.port ? Number(url.port) : 5432
         const database = url.pathname.replace(/^\//, '')
 
-        if(!username || !password || !host || !database){
+        if(!username || !password || !host || !database) {
             throw new BadRequestException('Connection strings must contain: username, password, host name, database.')
         }
 
         return { host, port, database, username, password }
     }
 
-    private async _test_connection_string(connectionString: string){
+    private async _test_connection_string(connectionString: string) {
         const client = new Client({
             connectionString,
             ssl: {
@@ -108,7 +108,7 @@ export default class DbConnectionService {
             where: {id: projectId, ownerId: userId}
         })
 
-        if(!project){
+        if(!project) {
             throw new NotFoundException('Project not found.')
         }
 
@@ -132,7 +132,7 @@ export default class DbConnectionService {
             readOnly: readOnly ?? true,
         }
 
-        if(existingDbConn){
+        if(existingDbConn) {
             await existingDbConn.update(payload)
         } else {
             await DbConnection.create(payload as any)

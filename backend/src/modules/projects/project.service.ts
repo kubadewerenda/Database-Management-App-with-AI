@@ -17,11 +17,11 @@ type ProjectUpdateData = {
 export default class ProjectService {
     private async _findOwned(userId: number, projectId: number) {
         const project = await Project.findByPk(projectId)
-        if (!project) {
+        if(!project) {
             throw new NotFoundException('Project not found.')
         }
 
-        if(project.ownerId !== userId){
+        if(project.ownerId !== userId) {
             throw new ForbiddenException('You do not have perrmissions to this project.')
         }
 
@@ -36,7 +36,7 @@ export default class ProjectService {
 
     public async get_projects_list(userId: number): Promise<Array<Project>> {
         const projects = await Project.findAll({ where: { ownerId: userId }, order: [['created_at', 'DESC']] })
-        if(!projects){
+        if(!projects) {
             throw new NotFoundException('Projects not found')
         }
 
@@ -44,7 +44,7 @@ export default class ProjectService {
     }
 
     public async create_project(userId: number, { name, description }: ProjectCreateData): Promise<Project> {
-        if(!name){
+        if(!name) {
             throw new BadRequestException('Project name is required.')
         }
 
@@ -59,19 +59,19 @@ export default class ProjectService {
 
     public async update_project(userId: number, projectId: number, { name, description }: ProjectUpdateData): Promise<Project> {
         const project = await this._findOwned(userId, projectId)
-        if(!project){
+        if(!project) {
             throw new NotFoundException('Project not found.')
         }
 
-        if(project.ownerId !== userId){
+        if(project.ownerId !== userId) {
             throw new ForbiddenException('You do not have perrmissions to this project.')
         }
 
-        if(name !== undefined){
+        if(name !== undefined) {
             project.name = name
         }
 
-        if(description !== undefined){
+        if(description !== undefined) {
             project.description = description
         }
 
@@ -82,11 +82,11 @@ export default class ProjectService {
 
     public async delete_project(userId: number, projectId: number) {
         const project = await this._findOwned(userId, projectId)
-        if(!project){
+        if(!project) {
             throw new NotFoundException('Project not found.')
         }
 
-        if(project.ownerId !== userId){
+        if(project.ownerId !== userId) {
             throw new ForbiddenException('You do not have perrmissions to this project.')
         }
 

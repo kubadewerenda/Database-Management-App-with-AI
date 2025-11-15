@@ -11,10 +11,10 @@ import { UpsertConnectionSchema } from './dbconnection.validate.js'
 import { projectIdSchema } from '../projects/project.validation.js'
 
 
-class DbConnectionController extends Controller{
+class DbConnectionController extends Controller {
     private dbConnectionService: DbConnectionService
 
-    constructor(){
+    constructor() {
         super()
         this.dbConnectionService = new DbConnectionService()
     }
