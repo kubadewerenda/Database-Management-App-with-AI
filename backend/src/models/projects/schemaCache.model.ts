@@ -3,6 +3,7 @@ import {
     ForeignKey, BelongsTo, Unique
 } from 'sequelize-typescript'
 import DbConnection from './connection.model.js'
+import type { DbSchemaSnapshot } from '../../types/schemaCache/schemaCache.js'
 
 @Table({
     tableName: 'schema_cache',
@@ -22,12 +23,12 @@ export default class SchemaCache extends Model<SchemaCache> {
     connectionId!: number
 
     @AllowNull(false)
-    @Column(DataType.DATE)
+    @Column({ field: 'refreshed_at', type: DataType.DATE })
     refreshedAt!: Date
 
     @AllowNull(false)
-    @Column(DataType.JSONB)
-    tables!: unknown
+    @Column({ field: 'tables', type: DataType.JSONB })
+    tables!: DbSchemaSnapshot['tables']
 
     @BelongsTo(() => DbConnection, { as: 'connection' })
     connection!: DbConnection
