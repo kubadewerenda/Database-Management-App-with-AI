@@ -11,26 +11,26 @@ import { ErrorCodeEnum } from '../../enums/error-code.enum.js'
 import { projectIdSchema, projectCreateSchema, projectUpdateSchema } from './project.validation.js'
 
 
-class ProjectController extends Controller{
+class ProjectController extends Controller {
     private projectService: ProjectService
 
-    constructor(){
+    constructor() {
         super()
         this.projectService = new ProjectService()
     }
 
-    private async get_project(req: Request, res: Response){
-        const params = projectIdSchema.safeParse(req.params.projectId)
-        if(!params.success) throw params.error
+    private async get_project(req: Request, res: Response) {
+        const projectId = projectIdSchema.safeParse(req.params.projectId)
+        if(!projectId.success) throw projectId.error
 
         const userId = req.user!.id
 
-        const project: Project = await this.projectService.get_project(userId, params.data)
+        const project: Project = await this.projectService.get_project(userId, projectId.data)
 
         return res.status(200).json({ project })
     }
 
-    private async get_projects_list(req: Request, res: Response){
+    private async get_projects_list(req: Request, res: Response) {
         const userId = req.user!.id
 
         const projects: Array<Project> = await this.projectService.get_projects_list(userId) 
@@ -38,7 +38,7 @@ class ProjectController extends Controller{
         return res.status(200).json({ projects })
     }
 
-    private async create_project(req: Request, res: Response){
+    private async create_project(req: Request, res: Response) {
         const parsed = projectCreateSchema.safeParse(req.body)
         if(!parsed.success) throw parsed.error
 
@@ -54,16 +54,16 @@ class ProjectController extends Controller{
         )
     }
 
-    private async update_project(req: Request, res: Response){
-        const parsedParams = projectIdSchema.safeParse(req.params.projectId)
-        if(!parsedParams.success) throw parsedParams.error
+    private async update_project(req: Request, res: Response) {
+        const projectId = projectIdSchema.safeParse(req.params.projectId)
+        if(!projectId.success) throw projectId.error
 
         const parsedData = projectUpdateSchema.safeParse(req.body)
         if(!parsedData.success) throw parsedData.error
 
         const userId = req.user!.id
 
-        const project = await this.projectService.update_project(userId, parsedParams.data, parsedData.data)
+        const project = await this.projectService.update_project(userId, projectId.data, parsedData.data)
 
         return res.status(200).json({
             message: 'Project updated successfully',
@@ -71,13 +71,13 @@ class ProjectController extends Controller{
         })
     }
 
-    private async delete_project(req: Request, res: Response){
-        const params = projectIdSchema.safeParse(req.params.projectId)
-        if(!params.success) throw params.error
+    private async delete_project(req: Request, res: Response) {
+        const projectId = projectIdSchema.safeParse(req.params.projectId)
+        if(!projectId.success) throw projectId.error
 
         const userId = req.user!.id
 
-        await this.projectService.delete_project(userId, params.data)
+        await this.projectService.delete_project(userId, projectId.data)
 
         return res.status(200).json({ message: 'Project deleted successfully.'})
     }

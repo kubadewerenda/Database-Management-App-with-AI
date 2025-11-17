@@ -44,7 +44,7 @@ export default class UserService {
             throw new BadRequestException('Email and password are required.')
         }
 
-        if(password !== passwordCheck){
+        if(password !== passwordCheck) {
             throw new BadRequestException('Passwords must be the same.', ErrorCodeEnum.VALIDATION_ERROR)
         }
 
@@ -67,7 +67,7 @@ export default class UserService {
     }
 
     public async login({ email, password }: CredentialsD) {
-        if(!email || !password){
+        if(!email || !password) {
             throw new BadRequestException('Email and password are required.')
         }
 
@@ -88,7 +88,7 @@ export default class UserService {
         return { user: user.toSafeJSON(), accessToken }
     }
 
-    public async update_user(userId: number | undefined, { email, currentPassword, newPassword }: UpdateMeD){
+    public async update_user(userId: number | undefined, { email, currentPassword, newPassword }: UpdateMeD) {
         const user = await User.findByPk(userId)
         if (!user) throw new UnauthorizedException('User not found')
 
