@@ -1,7 +1,9 @@
 import { BadRequestException, NotFoundException } from '../../lib/errors.js'
 import Project from '../../models/projects/project.model.js'
 import DbConnection from '../../models/projects/connection.model.js'
+import SchemaCache from '../../models/projects/schemaCache.model.js'
 import { Client } from 'pg'
+import type { DbSchemaSnapshot, DbColumnSchema, DbTableSchema } from '../../types/schemaCache/schemaCache.js'
 
 type UpsertConnectionData = {
     connectionString: string
@@ -55,6 +57,126 @@ export default class DbConnectionService {
             try {
                 await client.end()
             } catch {}
+        }
+    }
+
+    private async _load_schema_snapshot(connectionString: string): Promise<DbSchemaSnapshot> {
+        const client = new Client({
+            connectionString,
+            ssl: {
+                rejectUnauthorized: false,
+            },
+        })
+
+        try {
+            await client.connect()
+
+            const tablesResp = await client.query(`
+                SELECT
+                    t.table_schema,
+                    t.table_name,
+                    obj_description(
+                        (quote_ident(t.table_schema) || '.' || quote_ident(t.table_name))::regclass
+                    ) AS table_comment
+                FROM information_schema.tables t
+                WHERE t.table_type = 'BASE TABLE'
+                    AND t.table_schema NOT IN ('pg_catalog', 'information_schema')
+                ORDER BY t.table_schema, t.table_name;
+            `)
+
+            const columnsResp = await client.query(`
+                SELECT
+                    c.table_schema,
+                    c.table_name,
+                    c.column_name,
+                    c.data_type,
+                    c.is_nullable = 'YES' AS is_nullable,
+                    c.column_default,
+                    tc.constraint_type,
+                    fk_tab.table_name AS fk_table_name,
+                    fk_col.column_name AS fk_column_name
+                FROM information_schema.columns c
+                LEFT JOIN information_schema.key_column_usage kcu
+                    ON kcu.table_schema = c.table_schema
+                    AND kcu.table_name = c.table_name
+                    AND kcu.column_name = c.column_name
+                LEFT JOIN information_schema.table_constraints tc
+                    ON tc.constraint_name = kcu.constraint_name
+                    AND tc.table_schema = kcu.table_schema
+                    AND tc.table_name = kcu.table_name
+                LEFT JOIN information_schema.referential_constraints rc
+                    ON rc.constraint_name = kcu.constraint_name
+                LEFT JOIN information_schema.key_column_usage fk_col
+                    ON fk_col.constraint_name = rc.unique_constraint_name
+                    AND fk_col.ordinal_position = kcu.position_in_unique_constraint
+                LEFT JOIN information_schema.tables fk_tab
+                    ON fk_tab.table_schema = fk_col.table_schema
+                    AND fk_tab.table_name = fk_col.table_name
+                WHERE c.table_schema NOT IN ('pg_catalog', 'information_schema')
+                ORDER BY c.table_schema, c.table_name, c.ordinal_position;
+            `)
+
+            const tableMap = new Map<string, DbTableSchema>()
+
+            for(const row of tablesResp.rows) {
+                const key = `${row.table_schema}.${row.table_name}`
+
+                tableMap.set(key, {
+                    name: row.table_name,
+                    schema: row.table_schema,
+                    columns: [],
+                    comment: row.table_comment ?? null
+                })
+            }
+
+            for(const row of columnsResp.rows) {
+                const key = `${row.table_schema}.${row.table_name}`
+                const table = tableMap.get(key)
+                if(!table) continue
+
+                const col: DbColumnSchema = {
+                    name: row.column_name,
+                    dataType: row.data_type,
+                    isNullable: !!row.is_nullable,
+                    isPrimaryKey: row.constraint_type === 'PRIMARY KEY',
+                    isForeignKey: row.constraint_type === 'FOREIGN KEY',
+                    defaultValue: row.column_default ?? null,
+                }
+
+                if(row.constraint_type === 'FOREIGN KEY' && row.fk_table_name && row.fk_column_name) {
+                    col.references = {
+                        table: row.fk_table_name,
+                        column: row.fk_column_name,
+                    }
+                }
+
+                table.columns.push(col)
+            }
+
+            const tables = Array.from(tableMap.values())
+            return { tables }
+        } finally {
+            try {
+                await client.end()
+            } catch {}
+        }
+    }
+
+    private async _upsert_schema_cache(connectionId: number, snapshot: DbSchemaSnapshot) {
+        const existing = await SchemaCache.findOne({
+            where: { connectionId },
+        })
+
+        const payload = {
+            connectionId,
+            refreshedAt: new Date(),
+            tables: snapshot.tables,
+        }
+
+        if(existing) {
+            await existing.update(payload as any)
+        } else {
+            await SchemaCache.create(payload as any)
         }
     }
 
@@ -132,17 +254,35 @@ export default class DbConnectionService {
             readOnly: readOnly ?? true,
         }
 
+        let dbConn: DbConnection
+
         if(existingDbConn) {
             await existingDbConn.update(payload)
+            dbConn = existingDbConn
         } else {
-            await DbConnection.create(payload as any)
+            dbConn = await DbConnection.create(payload as any)
         }
 
         // TODO: Dodac schemat itp itd
+        const snapshot = await this._load_schema_snapshot(connectionString)
+        await this._upsert_schema_cache(dbConn.id, snapshot)
 
         return {
             ok: true,
             latencyMs: testResult.latencyMs
+        }
+    }
+
+    public async refresh_schema_for_project(projectId: number, userId: number) {
+        const dbConn = await this.get_db_model(projectId, userId)
+        const connectionString = this.build_connection_string_from_model(dbConn)
+
+        const snapshot = await this._load_schema_snapshot(connectionString)
+        await this._upsert_schema_cache(dbConn.id, snapshot)
+
+        return {
+            ok: true,
+            refreshedAt: new Date()
         }
     }
 
