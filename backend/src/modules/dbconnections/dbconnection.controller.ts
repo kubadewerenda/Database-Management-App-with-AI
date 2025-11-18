@@ -7,7 +7,7 @@ import { asyncHandler } from '../../middlewares/asyncHandler.middleware.js'
 import { BadRequestException, UnauthorizedException } from '../../lib/errors.js'
 import { ErrorCodeEnum } from '../../enums/error-code.enum.js'
 
-import { UpsertConnectionSchema } from './dbconnection.validate.js'
+import { UpsertConnectionSchema } from './dbconnection.validation.js'
 import { projectIdSchema } from '../projects/project.validation.js'
 
 
