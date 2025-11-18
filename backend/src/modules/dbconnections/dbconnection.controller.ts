@@ -53,10 +53,28 @@ class DbConnectionController extends Controller {
             ...result
         })
     }
+
+    private async refresh_schema(req: Request, res: Response) {
+        const projectId = projectIdSchema.safeParse(req.params.projectId)
+        if(!projectId.success) throw projectId.error
+
+        const userId = req.user!.id
+
+        const result = await this.dbConnectionService.refresh_schema_for_project(
+            projectId.data,
+            userId
+        )
+
+        return res.status(200).json({
+            message: 'Schema refreshed successfully.',
+            ...result,
+        })
+    }
     
     public routes(): void {
         this.router.put('/:projectId/db-connection', userMd.isAuthenticated, asyncHandler(this.upsert_connection.bind(this)))
         this.router.get('/:projectId/db-connection/test', userMd.isAuthenticated, asyncHandler(this.test_connection.bind(this)))
+        this.router.post('/:projectId/db-connection/schema/refresh', userMd.isAuthenticated, asyncHandler(this.refresh_schema.bind(this)))
     }
 }
 
