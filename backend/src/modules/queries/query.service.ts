@@ -112,7 +112,27 @@ export default class QueryService {
                 explain: explained,
             }
         } catch (err: any) {
-            throw new BadRequestException(`Query execution failed: ${err.message || err}`)
+            const dbError = {
+                message: err.message,
+                code: err.code,         
+                detail: err.detail,      
+                hint: err.hint,          
+                position: err.position,  
+                schema: err.schema,
+                table: err.table,
+                column: err.column,
+            }
+
+            const prettyMessageParts = []
+
+            if (dbError.message) prettyMessageParts.push(dbError.message)
+            if (dbError.code) prettyMessageParts.push(`(error code: ${dbError.code})`)
+            if (dbError.position) prettyMessageParts.push(`at position ${dbError.position}`)
+            if (dbError.table) prettyMessageParts.push(`in table "${dbError.table}"`)
+
+            const prettyMessage = `Query failed: ${prettyMessageParts.join(' ')}`
+            
+            throw new BadRequestException(prettyMessage)
         } finally {
             try {
                 await client.end()
