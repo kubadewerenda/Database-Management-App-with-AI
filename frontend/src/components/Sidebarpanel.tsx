@@ -1,0 +1,47 @@
+// SidebarPanel.tsx
+import type { ReactNode } from "react";
+import { IoClose } from "react-icons/io5";
+import SavedQueries from "./sidebar-components/SavedQueries";
+import Projects from "./sidebar-components/Projects";
+import Settings from "./sidebar-components/Settings";
+
+type SidebarPanelProps = {
+  isSideBarOpen: boolean;
+  setIsSideBarOpen: (value: boolean) => void;
+  activeView: string;
+  onProjectCreated?: () => void;
+};
+
+const SidebarPanel = ({
+  isSideBarOpen,
+  setIsSideBarOpen,
+  activeView,
+  onProjectCreated,
+}: SidebarPanelProps) => {
+  if (!isSideBarOpen) return null;
+
+  const views: Record<string, ReactNode> = {
+    projects: <Projects onProjectCreated={onProjectCreated} />,
+    settings: <Settings />,
+    queries: <SavedQueries />,
+  };
+
+  const panelContent = views[activeView] ?? views.projects;
+
+  return (
+    <aside className="relative flex w-[320px] shrink-0 flex-col self-start rounded-4xl border border-neutral-600 bg-neutral-900/80 p-6 shadow-xl">
+      {panelContent}
+
+      <button
+        type="button"
+        aria-label="Zamknij panel boczny"
+        className="absolute top-3 right-3 rounded-full p-1 text-neutral-400 transition hover:text-orange-400 hover:bg-neutral-700/60"
+        onClick={() => setIsSideBarOpen(false)}
+      >
+        <IoClose size={20} />
+      </button>
+    </aside>
+  );
+};
+
+export default SidebarPanel;
