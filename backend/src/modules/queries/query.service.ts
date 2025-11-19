@@ -70,7 +70,7 @@ export default class QueryService {
             if(explain) {
                 const explainSQL = `EXPLAIN (FORMAT JSON) ${sql.replace(/;+\s*$/, '')}`
                 const explainResp = await client.query(explainSQL)
-                explained = explainResp.rows?.[0]?.['EXPLAIN'] ?? explainResp.rows ?? null
+                explained = (explainResp.rows?.[0] && (explainResp.rows?.[0]['QUERY PLAN'] ?? explainResp.rows?.[0]['query_plan'])) ?? explainResp.rows ?? null
             }
 
             const resp = await client.query(sql)
