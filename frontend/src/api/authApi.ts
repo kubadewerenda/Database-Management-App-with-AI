@@ -12,6 +12,17 @@ type AuthResponse = {
 
 const API_URL = "http://localhost:8000";
 
+export const logoutUser = async (): Promise<void> => {
+  const response = await fetch(`${API_URL}/user/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("logout error");
+  }
+};
+
 export const registerUser = async (
   email: string,
   password: string,

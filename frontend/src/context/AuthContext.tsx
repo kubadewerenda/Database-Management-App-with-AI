@@ -1,5 +1,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { registerUser, getCurrentUser, loginUser } from "../api/authApi";
+import {
+  registerUser,
+  getCurrentUser,
+  loginUser,
+  logoutUser,
+} from "../api/authApi";
 
 type User = {
   id: number;
@@ -55,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const user = await loginUser(email, password);
-      console.log("Login - user z API", user);
+      //   console.log("Login - user z API", user);
       setUser(user);
     } catch (error) {
       console.error("Blad w login()", error);
@@ -81,7 +86,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = async () => {};
+  const logout = async () => {
+    setIsLoading(true);
+    try {
+      await logoutUser();
+      setUser(null);
+    } catch (error) {
+      console.error("logout error", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <AuthContext.Provider value={{ user, isLoading, login, logout, register }}>
@@ -90,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
