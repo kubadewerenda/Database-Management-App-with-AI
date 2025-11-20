@@ -10,7 +10,6 @@ import { ChatRole } from '../../enums/messages/messages.enum.js'
 import type { DbSchemaSnapshot } from '../../types/schemaCache/schemaCache.js'
 
 type SendMessageData = {
-    chatId?: number,
     message: string
 }
 
@@ -25,7 +24,7 @@ export default class ChatService {
         this.aiProvider = new AiProviderService()
     }
 
-    private async _getOrCreateChat(projectId: number, userId: number, chatId?: number): Promise<Chat> {
+    private async _getOrCreateChat(projectId: number, userId: number): Promise<Chat> {
         if(!projectId || !userId) {
             throw new BadRequestException('Project and user are required.')
         }
@@ -38,22 +37,6 @@ export default class ChatService {
             throw new NotFoundException('Project not found.')
         }
 
-        // if(chatId) {
-        //     const chat = await Chat.findOne({
-        //         where: { id: chatId, projectId: projectId }
-        //     })
-        //     if(!chat) {
-        //         throw new NotFoundException('Chat not found for this project.')
-        //     }
-        //     return chat
-        // }
-
-        // const newChat = await Chat.create({
-        //     projectId,
-        //     title: null
-        // } as any)
-
-        // return newChat
         let chat = await Chat.findOne({
             where: { projectId: projectId }
         })
@@ -105,13 +88,13 @@ export default class ChatService {
     public async sendMessage(
         projectId: number,
         userId: number,
-        { chatId, message }: SendMessageData,
+        { message }: SendMessageData,
     ) {
         if(!message || !message.trim()) {
             throw new BadRequestException('Message cannot be empty.')
         }
 
-        const chat = await this._getOrCreateChat(projectId, userId, chatId)
+        const chat = await this._getOrCreateChat(projectId, userId)
 
         const userMessage = await Message.create({
             chatId: chat.id,
