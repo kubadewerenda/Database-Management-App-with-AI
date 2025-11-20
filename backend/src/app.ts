@@ -12,6 +12,7 @@ import UserController from './modules/users/user.controller.js'
 import ProjectController from './modules/projects/project.controller.js'
 import DbConnectionController from './modules/dbconnections/dbconnection.controller.js'
 import queryController from './modules/queries/query.controller.js'
+import ChatController from './modules/chats/chat.controller.js'
 
 export class App {
     private app: Application
@@ -41,6 +42,7 @@ export class App {
         this.app.use('/project', ProjectController)
         this.app.use('/project', DbConnectionController)
         this.app.use('/project', queryController)
+        this.app.use('/project', ChatController)
         
         this.app.use(NotFoundHandler.handle)
     }
