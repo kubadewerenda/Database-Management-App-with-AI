@@ -82,6 +82,9 @@ class ProjectController extends Controller {
         return res.status(200).json({ message: 'Project deleted successfully.'})
     }
 
+    // TODO: dodac giga overview ktore zwraca wszystko o projekcie,
+    // TODO: przy tworzeniu musi dodatkowo: tworzyc chat projektu
+
     public routes(): void {
         this.router.get('/', userMd.isAuthenticated, asyncHandler(this.get_projects_list.bind(this)))
         this.router.get('/:projectId', userMd.isAuthenticated, asyncHandler(this.get_project.bind(this)))
