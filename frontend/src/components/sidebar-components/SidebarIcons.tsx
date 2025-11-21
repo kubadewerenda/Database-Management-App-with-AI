@@ -35,7 +35,7 @@ const SidebarIcons = ({
   };
 
   return (
-    <aside className="flex w-20 flex-col items-center justify-center gap-4 self-start rounded-4xl border border-neutral-600 bg-neutral-900/70 p-4 shadow-xl">
+    <aside className="flex w-18 flex-col items-center justify-center gap-4 self-start rounded-2xl border border-neutral-600/60 bg-neutral-900/70  shadow-xl p-6">
       {icons.map(({ id, label, icon }) => {
         const isActive = activeView === id;
 

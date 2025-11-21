@@ -1,5 +1,5 @@
 import SidebarIcons from "./SidebarIcons";
-import SidebarPanel from "./SidebarPanel";
+import SidebarPanel from "./Sidebarpanel";
 
 type SidebarProps = {
   isSideBarOpen: boolean;
