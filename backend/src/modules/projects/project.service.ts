@@ -4,6 +4,11 @@ import { AuthProvider, UserRole, UserStatus } from '../../enums/users/user.enum.
 import { BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException} from '../../lib/errors.js'
 import { ErrorCodeEnum } from '../../enums/error-code.enum.js'
 
+import { DbSchemaSnapshot } from '../../types/schemaCache/schemaCache.js'
+
+import DbConnectionService from '../dbconnections/dbconnection.service.js'
+import ChatService from '../chats/chat.service.js'
+
 type ProjectCreateData = {
     name: string,
     description?: string | null
@@ -14,7 +19,22 @@ type ProjectUpdateData = {
     description?: string | null
 }
 
+type ProjectOverview = {
+    project: Project,
+    schema: DbSchemaSnapshot,
+    chat: {
+        id: number
+    }
+}
+
 export default class ProjectService {
+    private dbConnectionService: DbConnectionService
+    private chatService: ChatService
+    
+    constructor() {
+        this.dbConnectionService = new DbConnectionService()
+        this.chatService = new ChatService()
+    }
     private async _findOwned(userId: number, projectId: number) {
         const project = await Project.findByPk(projectId)
         if(!project) {
@@ -32,6 +52,34 @@ export default class ProjectService {
         const project = await this._findOwned(userId, projectId)
         
         return project
+    }
+
+    public async getProjectOverview(userId: number, projectId: number): Promise<ProjectOverview> {
+        const project = await this._findOwned(userId, projectId)
+
+        // TODO: zmodyfikowac, to ma tylko rzucac wyjatek
+        const dbConnectionTest = await this.dbConnectionService.test_saved_connection(
+            project.id,
+            userId
+        )
+
+        const schema = await this.dbConnectionService.get_schema_snapshot_for_project(
+            project.id,
+            userId
+        )
+
+        const chat = await this.chatService.getOrCreateChatForProject(
+            project.id,
+            userId
+        )
+
+        return {
+            project,
+            schema,
+            chat : {
+                id: chat.id
+            }
+        }
     }
 
     public async get_projects_list(userId: number): Promise<Array<Project>> {

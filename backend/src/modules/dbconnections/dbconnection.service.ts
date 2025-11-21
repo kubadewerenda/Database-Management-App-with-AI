@@ -273,6 +273,27 @@ export default class DbConnectionService {
         }
     }
 
+    public async get_schema_snapshot_for_project(
+        projectId: number,
+        userId: number
+    ): Promise<DbSchemaSnapshot> {
+        const dbConn = await this.get_db_model(projectId, userId)
+
+        const schema = await SchemaCache.findOne({
+            where: { connectionId: dbConn.id }
+        })
+
+        if (!schema) {
+            throw new NotFoundException(
+                'Database schema is not loaded for this project. Please refresh schema.'
+            )
+        }
+
+        return {
+            tables: schema.tables
+        }
+    }
+
     public async refresh_schema_for_project(projectId: number, userId: number) {
         const dbConn = await this.get_db_model(projectId, userId)
         const connectionString = this.build_connection_string_from_model(dbConn)

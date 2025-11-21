@@ -50,21 +50,21 @@ export default class ChatService {
         return chat
     }
 
-    private async _loadSchemaForProject(projectId: number, userId: number): Promise<DbSchemaSnapshot> {
-        const dbConn = await this.dbConnectionService.get_db_model(projectId, userId)
+    // private async _loadSchemaForProject(projectId: number, userId: number): Promise<DbSchemaSnapshot> {
+    //     const dbConn = await this.dbConnectionService.get_db_model(projectId, userId)
         
-        const schema = await SchemaCache.findOne({
-            where: { connectionId: dbConn.id }
-        })
+    //     const schema = await SchemaCache.findOne({
+    //         where: { connectionId: dbConn.id }
+    //     })
 
-        if(!schema) {
-            throw new NotFoundException('Database schema is not loaded for this project. Please refresh schema.')
-        }
+    //     if(!schema) {
+    //         throw new NotFoundException('Database schema is not loaded for this project. Please refresh schema.')
+    //     }
 
-        return {
-            tables: schema.tables
-        }
-    }
+    //     return {
+    //         tables: schema.tables
+    //     }
+    // }
 
     private async _getChatHistory(chatId: number): Promise<AiChatMessage[]> {
         const messages = await Message.findAll({
@@ -85,6 +85,10 @@ export default class ChatService {
         }))
     }
 
+    public async getOrCreateChatForProject(projectId: number, userId: number): Promise<Chat> {
+        return this._getOrCreateChat(projectId, userId)
+    }
+
     public async sendMessage(
         projectId: number,
         userId: number,
@@ -103,7 +107,7 @@ export default class ChatService {
             sqlDraft: null
         } as any)
 
-        const schema = await this._loadSchemaForProject(projectId, userId)
+        const schema = await this.dbConnectionService.get_schema_snapshot_for_project(projectId, userId)
 
         const history = await this._getChatHistory(chat.id)
 
