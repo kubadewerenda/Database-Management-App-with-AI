@@ -30,6 +30,17 @@ class ProjectController extends Controller {
         return res.status(200).json({ project })
     }
 
+    private async getProjectOverview(req: Request, res: Response) {
+        const projectId = projectIdSchema.safeParse(req.params.projectId)
+        if(!projectId.success) throw projectId.error
+
+        const userId = req.user!.id
+
+        const projectOverview = await this.projectService.getProjectOverview(userId, projectId.data)
+
+        return res.status(200).json({ projectOverview })
+    }
+
     private async get_projects_list(req: Request, res: Response) {
         const userId = req.user!.id
 
@@ -88,6 +99,7 @@ class ProjectController extends Controller {
     public routes(): void {
         this.router.get('/', userMd.isAuthenticated, asyncHandler(this.get_projects_list.bind(this)))
         this.router.get('/:projectId', userMd.isAuthenticated, asyncHandler(this.get_project.bind(this)))
+        this.router.get('/:projectId/overview', userMd.isAuthenticated, asyncHandler(this.getProjectOverview.bind(this)))
         this.router.post('/', userMd.isAuthenticated, asyncHandler(this.create_project.bind(this)))
         this.router.patch('/:projectId', userMd.isAuthenticated, asyncHandler(this.update_project.bind(this)))
         this.router.delete('/:projectId', userMd.isAuthenticated, asyncHandler(this.delete_project.bind(this)))
