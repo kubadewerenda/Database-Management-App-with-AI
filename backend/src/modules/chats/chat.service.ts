@@ -69,7 +69,7 @@ export default class ChatService {
     private async _getChatHistory(chatId: number): Promise<AiChatMessage[]> {
         const messages = await Message.findAll({
             where: { chatId: chatId },
-            order: [['created_at', 'ASC']],
+            order: [['created_at', 'DESC']],
             limit: MAX_HISTORY_MESSAGES
         })
 
@@ -87,6 +87,15 @@ export default class ChatService {
 
     public async getOrCreateChatForProject(projectId: number, userId: number): Promise<Chat> {
         return this._getOrCreateChat(projectId, userId)
+    }
+
+    public async getChatHistory(projectId: number, userId: number): Promise<AiChatMessage[]> {
+        const chat = await this._getOrCreateChat(projectId, userId)
+        if(!chat) {
+            throw new NotFoundException('Chat not found for this project.')
+        }
+
+        return await this._getChatHistory(chat.id)
     }
 
     public async sendMessage(
