@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import type { Location } from "react-router-dom";
+import DbConnection from "../components/project-details/DbConnection";
 
 const ProjectDetails = () => {
   const navigate = useNavigate();
@@ -9,13 +10,12 @@ const ProjectDetails = () => {
   const projectName = state?.projectName || "Projekt";
 
   return (
-    <section className="flex h-full flex-col gap-8 text-neutral-200">
-      <header className="flex items-center justify-between border-b border-neutral-700 pb-4">
+    <section className="flex h-full flex-col gap-8 text-neutral-200 bg-amber-900">
+      <header className="flex items-center justify-between pb-4">
         <div>
-          <p className="text-sm uppercase tracking-widest text-neutral-500">
-            Szczegóły projektu
-          </p>
-          <h1 className="text-3xl font-semibold text-white">{projectName}</h1>
+          <h1 className="text-2xl font-semibold text-neutral-200">
+            {projectName}
+          </h1>
         </div>
         <button
           type="button"
@@ -25,6 +25,9 @@ const ProjectDetails = () => {
           Wróć do listy
         </button>
       </header>
+      <div>
+        <DbConnection />
+      </div>
     </section>
   );
 };

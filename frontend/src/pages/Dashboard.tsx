@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
-import SidebarIcons from "../components/SidebarIcons";
-import SidebarPanel from "../components/SidebarPanel";
+import SidebarIcons from "../components/sidebar-components/SidebarIcons";
+import SidebarPanel from "../components/sidebar-components/Sidebarpanel";
 import { Outlet } from "react-router-dom";
 
 const Dashboard = () => {
@@ -10,10 +10,10 @@ const Dashboard = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   return (
-    <main className="flex min-h-screen flex-col gap-6 p-6">
+    <main className="flex h-screen flex-col gap-4 p-4 overflow-hidden">
       <Navbar />
 
-      <section className="flex flex-1 items-stretch gap-6">
+      <section className="flex flex-1 items-stretch gap-4 overflow-hidden">
         <SidebarIcons
           activeView={activeView}
           setActiveView={setActiveView}
@@ -28,8 +28,8 @@ const Dashboard = () => {
           onProjectCreated={() => setRefreshTrigger((prev) => prev + 1)}
         />
 
-        <div className="flex-1">
-          <div className="h-full min-h-full rounded-4xl border border-neutral-200/20 bg-neutral-900 p-6">
+        <div className="flex-1 overflow-hidden">
+          <div className="flex h-full min-h-0 flex-col rounded-xl border border-neutral-200/20 bg-neutral-900 p-6">
             <Outlet context={{ refreshTrigger }} />
           </div>
         </div>

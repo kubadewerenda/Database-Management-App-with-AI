@@ -1,9 +1,9 @@
 // SidebarPanel.tsx
 import type { ReactNode } from "react";
 import { IoClose } from "react-icons/io5";
-import SavedQueries from "./sidebar-components/SavedQueries";
-import Projects from "./sidebar-components/Projects";
-import Settings from "./sidebar-components/Settings";
+import SavedQueries from "../sidebarOptions-components/SavedQueries";
+import Projects from "../sidebarOptions-components/Projects";
+import Settings from "../sidebarOptions-components/Settings";
 
 type SidebarPanelProps = {
   isSideBarOpen: boolean;
@@ -29,7 +29,7 @@ const SidebarPanel = ({
   const panelContent = views[activeView] ?? views.projects;
 
   return (
-    <aside className="relative flex w-[320px] shrink-0 flex-col self-start rounded-4xl border border-neutral-600 bg-neutral-900/80 p-6 shadow-xl">
+    <aside className="relative flex w-[320px] shrink-0 flex-col self-start rounded-2xl border border-neutral-600/70 bg-neutral-900/80 p-6 shadow-xl">
       {panelContent}
 
       <button
