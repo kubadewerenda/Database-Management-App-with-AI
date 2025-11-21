@@ -66,20 +66,22 @@ export default class ChatService {
     //     }
     // }
 
-    private async _getChatHistory(chatId: number): Promise<AiChatMessage[]> {
+    private async _getChatHistory(chatId: number, forAi: boolean = false): Promise<AiChatMessage[]> {
         const messages = await Message.findAll({
             where: { chatId: chatId },
-            order: [['created_at', 'DESC']],
+            order: [['created_at' , 'DESC']],
             limit: MAX_HISTORY_MESSAGES
         })
 
-        return messages.map((m) => ({
+        const ordered = forAi ? [...messages].reverse() : messages
+
+        return ordered.map((m) => ({
             role:
                 m.role === ChatRole.USER
                     ? 'user'
                     : m.role === ChatRole.ASSISTANT
-                    ? 'assistant'
-                    : 'system',
+                        ? 'assistant'
+                        : 'system',
             content: m.content,
             sqlDraft: m.sqlDraft ?? null,
         }))
@@ -95,7 +97,7 @@ export default class ChatService {
             throw new NotFoundException('Chat not found for this project.')
         }
 
-        return await this._getChatHistory(chat.id)
+        return await this._getChatHistory(chat.id, false)
     }
 
     public async sendMessage(
@@ -118,7 +120,7 @@ export default class ChatService {
 
         const schema = await this.dbConnectionService.get_schema_snapshot_for_project(projectId, userId)
 
-        const history = await this._getChatHistory(chat.id)
+        const history = await this._getChatHistory(chat.id, true)
 
         const aiResp = await this.aiProvider.generateSQLFromNeutralLanguage({
             schema,
