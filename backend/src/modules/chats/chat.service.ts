@@ -69,7 +69,7 @@ export default class ChatService {
     private async _getChatHistory(chatId: number, forAi: boolean = false): Promise<AiChatMessage[]> {
         const messages = await Message.findAll({
             where: { chatId: chatId },
-            order: [['created_at' , 'DESC']],
+            order: [['created_at', 'DESC']],
             limit: MAX_HISTORY_MESSAGES
         })
 
