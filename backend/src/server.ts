@@ -19,7 +19,7 @@ async function bootstrap() {
         server = http.createServer(app)
 
         server.listen(PORT, () => {
-            
+            logger.info(`Server listening on port ${PORT}`)
         })
     } catch (err: any) {
         logger.error(`Startup failed: ${err?.message || err}`)
