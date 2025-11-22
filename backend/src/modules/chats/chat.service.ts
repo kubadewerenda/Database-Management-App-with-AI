@@ -8,10 +8,26 @@ import AiProviderService from '../aiProvider/aiProvider.service.js'
 import { AiChatMessage } from '../../types/ai/aiProvider.js'
 import { ChatRole } from '../../enums/messages/messages.enum.js'
 import type { DbSchemaSnapshot } from '../../types/schemaCache/schemaCache.js'
+import { Op } from 'sequelize'
 
 type SendMessageData = {
     message: string
 }
+
+type ChatHistoryMessage = {
+    id: number
+    role: 'user' | 'assistant' | 'system'
+    content: string
+    sqlDraft: string | null
+    createdAt: Date
+}
+
+type ChatHistoryResult = {
+    messages: ChatHistoryMessage[]
+    nextCursor: number | null     
+    hasMore: boolean
+}
+
 
 const MAX_HISTORY_MESSAGES = 20
 
@@ -50,6 +66,24 @@ export default class ChatService {
         return chat
     }
 
+    private async _getRawMessages(
+        chatId: number,
+        limit: number,
+        beforeMessageId?: number
+    ): Promise<Message[]> {
+        const where: any = { chatId }
+
+        if(beforeMessageId) {
+            where.id = { [Op.lt]: beforeMessageId }
+        }
+
+        return await Message.findAll({
+            where,
+            order: [['created_at', 'DESC']],
+            limit,
+        })
+    }
+
     // private async _loadSchemaForProject(projectId: number, userId: number): Promise<DbSchemaSnapshot> {
     //     const dbConn = await this.dbConnectionService.get_db_model(projectId, userId)
         
@@ -66,14 +100,10 @@ export default class ChatService {
     //     }
     // }
 
-    private async _getChatHistory(chatId: number, forAi: boolean = false): Promise<AiChatMessage[]> {
-        const messages = await Message.findAll({
-            where: { chatId: chatId },
-            order: [['created_at', 'DESC']],
-            limit: MAX_HISTORY_MESSAGES
-        })
+    private async _getChatHistoryForAi(chatId: number): Promise<AiChatMessage[]> {
+        const messages = await this._getRawMessages(chatId, MAX_HISTORY_MESSAGES)
 
-        const ordered = forAi ? [...messages].reverse() : messages
+        const ordered = [...messages].reverse() 
 
         return ordered.map((m) => ({
             role:
@@ -87,17 +117,55 @@ export default class ChatService {
         }))
     }
 
-    public async getOrCreateChatForProject(projectId: number, userId: number): Promise<Chat> {
+    public async getOrCreateChatForProject(
+        projectId: number, 
+        userId: number,
+        options?: { 
+            limit?: number,
+            beforeId?: number
+        }
+    ): Promise<Chat> {
         return this._getOrCreateChat(projectId, userId)
     }
 
-    public async getChatHistory(projectId: number, userId: number): Promise<AiChatMessage[]> {
+    public async getChatHistory(
+        projectId: number, 
+        userId: number,
+        options?: { limit?: number; beforeId?: number },
+    ): Promise<ChatHistoryResult> {
+        const limit = options?.limit && options.limit > 0 ? options.limit : MAX_HISTORY_MESSAGES
+        const beforeId = options?.beforeId
+
         const chat = await this._getOrCreateChat(projectId, userId)
         if(!chat) {
             throw new NotFoundException('Chat not found for this project.')
         }
 
-        return await this._getChatHistory(chat.id, false)
+        const rawMessages = await this._getRawMessages(chat.id, limit, beforeId)
+
+        const ordered = [...rawMessages].reverse()
+
+        const messages: ChatHistoryMessage[] = ordered.map((m) => ({
+            id: m.id,
+            role:
+                m.role === ChatRole.USER
+                    ? 'user'
+                    : m.role === ChatRole.ASSISTANT
+                    ? 'assistant'
+                    : 'system',
+            content: m.content,
+            sqlDraft: m.sqlDraft ?? null,
+            createdAt: m.createdAt, 
+        }))
+
+        const oldest = ordered[0]
+        const nextCursor = oldest ? oldest.id : null
+
+        return {
+            messages,
+            nextCursor,
+            hasMore: rawMessages.length === limit,
+        }
     }
 
     public async sendMessage(
@@ -120,7 +188,7 @@ export default class ChatService {
 
         const schema = await this.dbConnectionService.get_schema_snapshot_for_project(projectId, userId)
 
-        const history = await this._getChatHistory(chat.id, true)
+        const history = await this._getChatHistoryForAi(chat.id)
 
         const aiResp = await this.aiProvider.generateSQLFromNeutralLanguage({
             schema,

@@ -25,7 +25,14 @@ class ChatController extends Controller {
 
         const userId = req.user!.id
 
-        const chatHistory = await this.chatService.getChatHistory(projectId.data, userId)
+        const limit = req.query.limit ? Number(req.query.limit) : undefined
+        const beforeId = req.query.beforeId ? Number(req.query.beforeId) : undefined
+
+        const chatHistory = await this.chatService.getChatHistory(projectId.data, userId, 
+            {
+                limit,
+                beforeId,
+        })
 
         return res.status(200).json({
             ...chatHistory
