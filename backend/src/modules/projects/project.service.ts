@@ -73,6 +73,8 @@ export default class ProjectService {
             userId
         )
 
+        // TODO: dodac title chatu
+
         return {
             project,
             schema,
