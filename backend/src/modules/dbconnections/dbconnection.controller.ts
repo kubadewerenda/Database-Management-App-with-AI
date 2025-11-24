@@ -1,13 +1,11 @@
 import { Request, Response } from 'express'
 import Controller from '../../controllers/main.controller.js'
-import DbConnectionService from './dbconnection.service.js'
+import DbConnectionService from './dbConnection.service.js'
 
 import * as userMd from '../../middlewares/users/user.middleware.js'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware.js'
-import { BadRequestException, UnauthorizedException } from '../../lib/errors.js'
-import { ErrorCodeEnum } from '../../enums/error-code.enum.js'
 
-import { UpsertConnectionSchema } from './dbconnection.validation.js'
+import { UpsertConnectionSchema } from './dbConnection.validation.js'
 import { projectIdSchema } from '../projects/project.validation.js'
 
 
@@ -19,7 +17,7 @@ class DbConnectionController extends Controller {
         this.dbConnectionService = new DbConnectionService()
     }
 
-    private async upsert_connection(req: Request, res: Response) {
+    private async upsertConnection(req: Request, res: Response) {
         const projectId = projectIdSchema.safeParse(req.params.projectId)
         if(!projectId.success) throw projectId.error
 
@@ -28,7 +26,7 @@ class DbConnectionController extends Controller {
 
         const userId = req.user!.id
 
-        const result = await this.dbConnectionService.upsert_for_project(
+        const result = await this.dbConnectionService.upsertForProject(
             projectId.data,
             userId,
             connectionString.data
@@ -40,41 +38,40 @@ class DbConnectionController extends Controller {
         })
     }
 
-    private async test_connection(req: Request, res: Response) {
+    private async testConnection(req: Request, res: Response) {
         const projectId = projectIdSchema.safeParse(req.params.projectId)
         if(!projectId.success) throw projectId.error
 
         const userId = req.user!.id
 
-        const result = await this.dbConnectionService.test_saved_connection(projectId.data, userId)
+        const result = await this.dbConnectionService.testSavedConnection(projectId.data, userId)
 
         return res.status(200).json({
-            message: 'Your connection is established.',
+            message: 'Your connection is ok.',
             ...result
         })
     }
 
-    private async refresh_schema(req: Request, res: Response) {
+    private async refreshSchema(req: Request, res: Response) {
         const projectId = projectIdSchema.safeParse(req.params.projectId)
         if(!projectId.success) throw projectId.error
 
         const userId = req.user!.id
 
-        const result = await this.dbConnectionService.refresh_schema_for_project(
+        await this.dbConnectionService.refreshSchemaForProject(
             projectId.data,
             userId
         )
 
         return res.status(200).json({
             message: 'Schema refreshed successfully.',
-            ...result,
         })
     }
     
     public routes(): void {
-        this.router.put('/:projectId/db-connection', userMd.isAuthenticated, asyncHandler(this.upsert_connection.bind(this)))
-        this.router.get('/:projectId/db-connection/test', userMd.isAuthenticated, asyncHandler(this.test_connection.bind(this)))
-        this.router.post('/:projectId/db-connection/schema/refresh', userMd.isAuthenticated, asyncHandler(this.refresh_schema.bind(this)))
+        this.router.put('/:projectId/db-connection', userMd.isAuthenticated, asyncHandler(this.upsertConnection.bind(this)))
+        this.router.get('/:projectId/db-connection/test', userMd.isAuthenticated, asyncHandler(this.testConnection.bind(this)))
+        this.router.post('/:projectId/db-connection/schema/refresh', userMd.isAuthenticated, asyncHandler(this.refreshSchema.bind(this)))
     }
 }
 

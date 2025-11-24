@@ -24,9 +24,10 @@ export default class DbConnection extends Model<DbConnection> {
     @Column({ field: 'project_id', type: DataType.BIGINT })
     projectId!: number
 
-    @AllowNull(false)
+    // TODO: wywalic na final
+    @AllowNull(true)
     @Column(DataType.STRING)
-    name!: string
+    name!: string | null
 
     @AllowNull(false)
     @Column(DataType.STRING)
