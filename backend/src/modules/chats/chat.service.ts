@@ -3,7 +3,7 @@ import Project from '../../models/projects/project.model.js'
 import Chat from '../../models/chat/chat.model.js'
 import Message from '../../models/chat/message.model.js'
 import SchemaCache from '../../models/projects/schemaCache.model.js'
-import DbConnectionService from '../dbconnections/dbconnection.service.js'
+import DbConnectionService from '../dbconnections/dbConnection.service.js'
 import AiProviderService from '../aiProvider/aiProvider.service.js'
 import { AiChatMessage } from '../../types/ai/aiProvider.js'
 import { ChatRole } from '../../enums/messages/messages.enum.js'
@@ -83,22 +83,6 @@ export default class ChatService {
             limit,
         })
     }
-
-    // private async _loadSchemaForProject(projectId: number, userId: number): Promise<DbSchemaSnapshot> {
-    //     const dbConn = await this.dbConnectionService.get_db_model(projectId, userId)
-        
-    //     const schema = await SchemaCache.findOne({
-    //         where: { connectionId: dbConn.id }
-    //     })
-
-    //     if(!schema) {
-    //         throw new NotFoundException('Database schema is not loaded for this project. Please refresh schema.')
-    //     }
-
-    //     return {
-    //         tables: schema.tables
-    //     }
-    // }
 
     private async _getChatHistoryForAi(chatId: number): Promise<AiChatMessage[]> {
         const messages = await this._getRawMessages(chatId, MAX_HISTORY_MESSAGES)
@@ -186,7 +170,7 @@ export default class ChatService {
             sqlDraft: null
         } as any)
 
-        const schema = await this.dbConnectionService.get_schema_snapshot_for_project(projectId, userId)
+        const schema = await this.dbConnectionService.getSchemaSnapshotForProject(projectId, userId)
 
         const history = await this._getChatHistoryForAi(chat.id)
 

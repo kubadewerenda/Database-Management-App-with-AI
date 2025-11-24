@@ -1,6 +1,6 @@
 import { BadRequestException, NotFoundException } from '../../lib/errors.js'
 import { Op, where } from 'sequelize'
-import DbConnectionService from '../dbconnections/dbconnection.service.js'
+import DbConnectionService from '../dbconnections/dbConnection.service.js'
 
 import Execution from '../../models/queries/execution.model.js'
 import SavedQuery from '../../models/queries/savedQuery.model.js'
@@ -233,8 +233,8 @@ export default class QueryService {
 
         this._validateSelectOnly(sql)
 
-        const dbConn = await this.dbConnectionService.get_db_model(projectId, userId)
-        const connectionString = this.dbConnectionService.build_connection_string_from_model(dbConn)
+        const dbConn = await this.dbConnectionService.getDbModel(projectId, userId)
+        const connectionString = this.dbConnectionService.buildConnectionStringFromModel(dbConn)
 
         const client = new Client({
             connectionString,

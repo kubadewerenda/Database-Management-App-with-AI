@@ -7,7 +7,7 @@ import { Op } from 'sequelize'
 
 import { DbSchemaSnapshot } from '../../types/schemaCache/schemaCache.js'
 
-import DbConnectionService from '../dbconnections/dbconnection.service.js'
+import DbConnectionService from '../dbconnections/dbConnection.service.js'
 import ChatService from '../chats/chat.service.js'
 
 type ProjectCreateData = {
@@ -74,12 +74,12 @@ export default class ProjectService {
         const project = await this._findOwned(userId, projectId)
 
         // TODO: zmodyfikowac, to ma tylko rzucac wyjatek
-        const dbConnectionTest = await this.dbConnectionService.test_saved_connection(
+        const dbConnectionTest = await this.dbConnectionService.testSavedConnection(
             project.id,
             userId
         )
 
-        const schema = await this.dbConnectionService.get_schema_snapshot_for_project(
+        const schema = await this.dbConnectionService.getSchemaSnapshotForProject(
             project.id,
             userId
         )

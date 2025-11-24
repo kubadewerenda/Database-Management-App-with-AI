@@ -1,18 +1,72 @@
+import crypto from 'crypto'
 import { BadRequestException, NotFoundException } from '../../lib/errors.js'
-import Project from '../../models/projects/project.model.js'
 import DbConnection from '../../models/projects/connection.model.js'
 import SchemaCache from '../../models/projects/schemaCache.model.js'
 import { Client } from 'pg'
 import type { DbSchemaSnapshot, DbColumnSchema, DbTableSchema } from '../../types/schemaCache/schemaCache.js'
+import * as helpFunctions from '../../lib/functions.js'
 
 type UpsertConnectionData = {
     connectionString: string
-    name?: string
-    readOnly?: boolean
 }
 
 export default class DbConnectionService {
-    private _parse_connection_string(conn: string) {
+    private _ensureSecretKey(): Buffer {
+        const secret = process.env.USER_DB_PASSWORD_SECRET
+        if (!secret) {
+            throw new Error('USER_DB_PASSWORD_SECRET not set.')
+        }
+
+        return crypto.createHash('sha256').update(secret).digest()
+    }
+
+    private _encryptPassword(plain: string): string {
+        const key = this._ensureSecretKey()
+        const iv = crypto.randomBytes(12)
+        const cipher = crypto.createCipheriv('aes-256-gcm', key, iv)
+
+        const encrypted = Buffer.concat([
+            cipher.update(plain, 'utf8'),
+            cipher.final(),
+        ])
+        const authTag = cipher.getAuthTag()
+
+        return [
+            iv.toString('base64'),
+            authTag.toString('base64'),
+            encrypted.toString('base64'),
+        ].join(':')
+    }
+
+    private _decryptPassword(stored: string): string {
+        try {
+            const [ivB64, tagB64, dataB64] = stored.split(':')
+            if (!ivB64 || !tagB64 || !dataB64) {
+                throw new Error('Invalid encrypted payload format.')
+            }
+
+            const key = this._ensureSecretKey()
+            const iv = Buffer.from(ivB64, 'base64')
+            const authTag = Buffer.from(tagB64, 'base64')
+            const encrypted = Buffer.from(dataB64, 'base64')
+
+            const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv)
+            decipher.setAuthTag(authTag)
+
+            const decrypted = Buffer.concat([
+                decipher.update(encrypted),
+                decipher.final(),
+            ])
+
+            return decrypted.toString('utf8')
+        } catch (err: any) {
+            throw new BadRequestException(
+                'Cannot decrypt database password. Please contact support.'
+            )
+        }
+    }
+
+    private _parseConnectionString(conn: string) {
         let url: URL
         try {
             url = new URL(conn)
@@ -37,7 +91,7 @@ export default class DbConnectionService {
         return { host, port, database, username, password }
     }
 
-    private async _test_connection_string(connectionString: string) {
+    private async _testConnectionString(connectionString: string) {
         const client = new Client({
             connectionString,
             ssl: {
@@ -49,8 +103,7 @@ export default class DbConnectionService {
             const started = Date.now()
             await client.connect()
             await client.query('SELECT 1')
-            const ms = Date.now() - started
-            return { ok: true, latencyMs: ms }
+            return { latencyMs: Date.now() - started }
         } catch(err: any) {
             throw new BadRequestException(`Cannot connect to database, error: ${err.message || err}`)
         } finally {
@@ -60,7 +113,7 @@ export default class DbConnectionService {
         }
     }
 
-    private async _load_schema_snapshot(connectionString: string): Promise<DbSchemaSnapshot> {
+    private async _loadSchemaSnapshot(connectionString: string): Promise<DbSchemaSnapshot> {
         const client = new Client({
             connectionString,
             ssl: {
@@ -155,6 +208,8 @@ export default class DbConnectionService {
 
             const tables = Array.from(tableMap.values())
             return { tables }
+        } catch(err: any) {
+            throw new BadRequestException(`Cannot load database schema, error: ${err.message || err}`)
         } finally {
             try {
                 await client.end()
@@ -162,7 +217,7 @@ export default class DbConnectionService {
         }
     }
 
-    private async _upsert_schema_cache(connectionId: number, snapshot: DbSchemaSnapshot) {
+    private async _upsertSchemaCache(connectionId: number, snapshot: DbSchemaSnapshot) {
         const existing = await SchemaCache.findOne({
             where: { connectionId },
         })
@@ -180,9 +235,8 @@ export default class DbConnectionService {
         }
     }
 
-    public build_connection_string_from_model(dbConn: DbConnection): string {
-        // TODO: dodac hash passworda
-        const password = dbConn.passwordEnc
+    public buildConnectionStringFromModel(dbConn: DbConnection): string {
+        const password = this._decryptPassword(dbConn.passwordEnc)
 
         const user = encodeURIComponent(dbConn.username)
         const pass = encodeURIComponent(password)
@@ -193,18 +247,8 @@ export default class DbConnectionService {
         return `postgres://${user}:${pass}@${host}:${port}/${db}`
     }
 
-    public async get_db_model(projectId: number, userId: number): Promise<DbConnection> {
-        if(!userId || !projectId) {
-            throw new BadRequestException('Project and user are required.')
-        }
-
-        const project = await Project.findOne({
-            where: {id: projectId, ownerId: userId}
-        })
-
-        if(!project) {
-            throw new NotFoundException('Project not found.')
-        }
+    public async getDbModel(projectId: number, userId: number): Promise<DbConnection> {
+        const project = await helpFunctions._ensureProjectOwned(projectId, userId)
 
         const dbConn = await DbConnection.findOne({
             where: {projectId: project.id}
@@ -217,41 +261,33 @@ export default class DbConnectionService {
         return dbConn
     }
 
-    public async upsert_for_project(
+    public async upsertForProject(
         projectId: number,
         userId: number,
-        { connectionString, name, readOnly }: UpsertConnectionData
+        { connectionString }: UpsertConnectionData
     ) {
-        if(!projectId || !userId) {
-            throw new BadRequestException('Project and user are required.')
-        }
+        const project = await helpFunctions._ensureProjectOwned(projectId, userId)
 
-        const project = await Project.findOne({
-            where: {id: projectId, ownerId: userId}
-        })
+        const connectionStringParsed = this._parseConnectionString(connectionString)
 
-        if(!project) {
-            throw new NotFoundException('Project not found.')
-        }
-
-        const connectionStringParsed = this._parse_connection_string(connectionString)
-
-        const testResult = await this._test_connection_string(connectionString)
+        const testResult = await this._testConnectionString(connectionString)
 
         const existingDbConn = await DbConnection.findOne({
             where: { projectId: project.id }
         })
 
+        const encryptedPassword = this._encryptPassword(
+            connectionStringParsed.password
+        )
+
         const payload = {
             projectId: project.id,
-            name: name || 'Main connection',
             host: connectionStringParsed.host,
             port: connectionStringParsed.port,
             database: connectionStringParsed.database,
             username: connectionStringParsed.username,
-            // TODO: zaszyfrowac haslo
-            passwordEnc: connectionStringParsed.password,
-            readOnly: readOnly ?? true,
+            passwordEnc: encryptedPassword,
+            readOnly: true,
         }
 
         let dbConn: DbConnection
@@ -263,26 +299,30 @@ export default class DbConnectionService {
             dbConn = await DbConnection.create(payload as any)
         }
 
-        const snapshot = await this._load_schema_snapshot(connectionString)
-        await this._upsert_schema_cache(dbConn.id, snapshot)
+        const snapshot = await this._loadSchemaSnapshot(connectionString)
+        await this._upsertSchemaCache(dbConn.id, snapshot)
+
+        if(!project.isActive) {
+            project.isActive = true
+            await project.save()
+        }
 
         return {
-            ok: true,
             latencyMs: testResult.latencyMs
         }
     }
 
-    public async get_schema_snapshot_for_project(
+    public async getSchemaSnapshotForProject(
         projectId: number,
         userId: number
     ): Promise<DbSchemaSnapshot> {
-        const dbConn = await this.get_db_model(projectId, userId)
+        const dbConn = await this.getDbModel(projectId, userId)
 
         const schema = await SchemaCache.findOne({
             where: { connectionId: dbConn.id }
         })
 
-        if (!schema) {
+        if(!schema) {
             throw new NotFoundException(
                 'Database schema is not loaded for this project. Please refresh schema.'
             )
@@ -293,23 +333,18 @@ export default class DbConnectionService {
         }
     }
 
-    public async refresh_schema_for_project(projectId: number, userId: number) {
-        const dbConn = await this.get_db_model(projectId, userId)
-        const connectionString = this.build_connection_string_from_model(dbConn)
+    public async refreshSchemaForProject(projectId: number, userId: number) {
+        const dbConn = await this.getDbModel(projectId, userId)
+        const connectionString = this.buildConnectionStringFromModel(dbConn)
 
-        const snapshot = await this._load_schema_snapshot(connectionString)
-        await this._upsert_schema_cache(dbConn.id, snapshot)
-
-        return {
-            ok: true,
-            refreshedAt: new Date()
-        }
+        const snapshot = await this._loadSchemaSnapshot(connectionString)
+        await this._upsertSchemaCache(dbConn.id, snapshot)
     }
 
-    public async test_saved_connection(projectId: number, userId: number) {
-        const dbConn = await this.get_db_model(projectId, userId)
-        const connectionString = this.build_connection_string_from_model(dbConn)
+    public async testSavedConnection(projectId: number, userId: number) {
+        const dbConn = await this.getDbModel(projectId, userId)
+        const connectionString = this.buildConnectionStringFromModel(dbConn)
 
-        return await this._test_connection_string(connectionString)
+        return await this._testConnectionString(connectionString)
     }
 }
