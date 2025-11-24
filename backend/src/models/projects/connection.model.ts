@@ -1,8 +1,19 @@
 import {
-    Table, Model, Column, DataType, PrimaryKey, AutoIncrement, AllowNull,
-    ForeignKey, BelongsTo, HasOne, Unique, Default, Index
+    Table,
+    Model,
+    Column,
+    DataType,
+    PrimaryKey,
+    AutoIncrement,
+    AllowNull,
+    ForeignKey,
+    BelongsTo,
+    HasOne,
+    Default,
+    Index,
 } from 'sequelize-typescript'
 import Project from './project.model.js'
+import SchemaCache from './schemaCache.model.js'
 
 @Table({
     tableName: 'db_connections',
@@ -55,7 +66,18 @@ export default class DbConnection extends Model<DbConnection> {
     @Column(DataType.BOOLEAN)
     readOnly!: boolean
 
-    @BelongsTo(() => Project, { as: 'project' })
+    @BelongsTo(() => Project, {
+        as: 'project',
+        onDelete: 'CASCADE',  
+        hooks: true,
+    })
     project!: Project
 
+    @HasOne(() => SchemaCache, {
+        as: 'schemaCache',
+        foreignKey: 'connectionId',
+        onDelete: 'CASCADE',
+        hooks: true,
+    })
+    schemaCache!: SchemaCache
 }

@@ -1,6 +1,16 @@
 import {
-    Table, Model, Column, DataType, PrimaryKey, AutoIncrement, AllowNull, Unique, BelongsToMany,
-    ForeignKey
+    Table, 
+    Model, 
+    Column, 
+    DataType, 
+    PrimaryKey, 
+    AutoIncrement,
+    AllowNull, 
+    Unique,
+    BelongsToMany, 
+    ForeignKey, 
+    BelongsTo, 
+    Index
 } from 'sequelize-typescript'
 import SavedQuery from './savedQuery.model.js'
 import SavedQueryTag from './savedQueryTag.model.js'
@@ -22,13 +32,26 @@ export default class Tag extends Model<Tag> {
 
     @ForeignKey(() => Project)
     @AllowNull(false)
-    @Column({ field: 'project_id', type: DataType.BIGINT })
+    @Index
+    @Column({
+        field: 'project_id',
+        type: DataType.BIGINT,
+        onDelete: 'CASCADE',
+    })
     projectId!: number
 
     @AllowNull(false)
     @Unique
+    @Index
     @Column(DataType.STRING)
     name!: string
+
+    @BelongsTo(() => Project, {
+        as: 'project',
+        onDelete: 'CASCADE',
+        hooks: true,
+    })
+    project!: Project
 
     @BelongsToMany(() => SavedQuery, () => SavedQueryTag, 'tagId', 'savedQueryId')
     savedQueries!: SavedQuery[]

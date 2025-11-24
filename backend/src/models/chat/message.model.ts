@@ -1,6 +1,14 @@
 import {
-    Table, Model, Column, DataType, PrimaryKey, AutoIncrement, AllowNull,
-    ForeignKey, BelongsTo, Index
+    Table,
+    Model,
+    Column,
+    DataType,
+    PrimaryKey,
+    AutoIncrement,
+    AllowNull,
+    ForeignKey,
+    BelongsTo,
+    Index
 } from 'sequelize-typescript'
 import Chat from './chat.model.js'
 import { ChatRole } from '../../enums/messages/messages.enum.js'
@@ -8,7 +16,10 @@ import { ChatRole } from '../../enums/messages/messages.enum.js'
 @Table({
     tableName: 'messages',
     timestamps: true,
-    indexes: [{ fields: ['chat_id'] }, { fields: ['role'] }],
+    indexes: [
+        { fields: ['chat_id'] }, 
+        { fields: ['role'] }
+    ],
 })
 export default class Message extends Model<Message> {
     @PrimaryKey
@@ -23,6 +34,7 @@ export default class Message extends Model<Message> {
     chatId!: number
 
     @AllowNull(false)
+    @Index
     @Column(DataType.ENUM(...Object.values(ChatRole)))
     role!: ChatRole
 
@@ -34,6 +46,10 @@ export default class Message extends Model<Message> {
     @Column({ type: DataType.TEXT, field: 'sql_draft' })
     sqlDraft!: string | null
 
-    @BelongsTo(() => Chat, { as: 'chat' })
+    @BelongsTo(() => Chat, {
+        as: 'chat',
+        onDelete: 'CASCADE',
+        hooks: true,
+    })
     chat!: Chat
 }

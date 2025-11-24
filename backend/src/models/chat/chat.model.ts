@@ -1,6 +1,15 @@
 import {
-    Table, Model, Column, DataType, PrimaryKey, AutoIncrement, AllowNull,
-    ForeignKey, BelongsTo, HasMany, Index
+    Table,
+    Model,
+    Column,
+    DataType,
+    PrimaryKey,
+    AutoIncrement,
+    AllowNull,
+    ForeignKey,
+    BelongsTo,
+    HasMany,
+    Index
 } from 'sequelize-typescript'
 import Project from '../projects/project.model.js'
 import Message from './message.model.js'
@@ -22,10 +31,23 @@ export default class Chat extends Model<Chat> {
     @Column({ field: 'project_id', type: DataType.BIGINT })
     projectId!: number
 
+    // TODO: wywalic na final
     @AllowNull(true)
     @Column(DataType.STRING)
     title!: string | null
 
-    @BelongsTo(() => Project, { as: 'project' })
+    @BelongsTo(() => Project, {
+        as: 'project',
+        onDelete: 'CASCADE',
+        hooks: true,
+    })
     project!: Project
+
+    @HasMany(() => Message, {
+        as: 'messages',
+        foreignKey: 'chatId',
+        onDelete: 'CASCADE',
+        hooks: true,
+    })
+    messages!: Message[]
 }
