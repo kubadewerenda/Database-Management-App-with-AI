@@ -4,7 +4,7 @@ import DbConnection from '../../models/projects/connection.model.js'
 import SchemaCache from '../../models/projects/schemaCache.model.js'
 import { Client } from 'pg'
 import type { DbSchemaSnapshot, DbColumnSchema, DbTableSchema } from '../../types/schemaCache/schemaCache.js'
-import * as helpFunctions from '../../lib/functions.js'
+import * as helpFunctions from '../../lib/utils/functions.js'
 
 type UpsertConnectionData = {
     connectionString: string

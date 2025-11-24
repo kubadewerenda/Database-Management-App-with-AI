@@ -1,5 +1,5 @@
-import Project from "../models/projects/project.model"
-import { BadRequestException, NotFoundException } from "./errors"
+import Project from "../../models/projects/project.model"
+import { BadRequestException, NotFoundException } from "../errors"
 
 export async function _ensureProjectOwned(projectId: number, userId: number): Promise<Project> {
     if (!projectId || !userId) {
