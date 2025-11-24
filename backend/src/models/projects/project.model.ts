@@ -7,7 +7,10 @@ import User from '../users/user.model.js'
 @Table({
     tableName: 'projects',
     timestamps: true,
-    indexes: [{ fields: ['owner_id'] }],
+    indexes: [
+        { fields: ['owner_id'] },
+        { fields: ['is_active'] },
+    ],  
 })
 export default class Project extends Model<Project> {
     @PrimaryKey
@@ -22,6 +25,14 @@ export default class Project extends Model<Project> {
     @AllowNull(true)
     @Column(DataType.TEXT)
     description!: string | null
+
+    @AllowNull(true)
+    @Column({ type: DataType.STRING })
+    color!: string | null
+
+    @AllowNull(false)
+    @Column({ field: 'is_active', type: DataType.BOOLEAN, defaultValue: false })
+    isActive!: boolean
 
     @ForeignKey(() => User)
     @AllowNull(false)

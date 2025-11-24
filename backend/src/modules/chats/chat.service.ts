@@ -203,8 +203,6 @@ export default class ChatService {
             sqlDraft: aiResp.sql
         } as any)
 
-        // TODO: dodac title chatu jako p.name + Assistant
-
         return {
             chatId: chat.id,
             userMessage: {

@@ -11,8 +11,15 @@ export const projectCreateSchema = z
         description: z.string().trim().max(2000).optional()
     })
 
-export const projectUpdateSchema = z
+export const projectUpdateSchema = projectCreateSchema.partial()
+
+export const projectListPaginationSchema = z
     .object({
-        name: z.string().trim().min(1, 'Name is required').max(255),
-        description: z.string().trim().max(2000).optional().nullable()
+        page: z.coerce.number().int().min(1).optional(),
+        limit: z.coerce.number().int().min(1).max(100).optional(),
+        search: z.string().trim().min(1).optional(),
+        order: z
+            .enum(['asc', 'desc', 'ASC', 'DESC'])
+            .optional()
+            .transform(v => v?.toUpperCase() as 'ASC' | 'DESC' | undefined),
     })

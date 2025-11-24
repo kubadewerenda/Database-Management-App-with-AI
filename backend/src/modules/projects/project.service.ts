@@ -3,6 +3,7 @@ import Project from '../../models/projects/project.model.js'
 import { AuthProvider, UserRole, UserStatus } from '../../enums/users/user.enum.js'
 import { BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException} from '../../lib/errors.js'
 import { ErrorCodeEnum } from '../../enums/error-code.enum.js'
+import { Op } from 'sequelize'
 
 import { DbSchemaSnapshot } from '../../types/schemaCache/schemaCache.js'
 
@@ -25,6 +26,21 @@ type ProjectOverview = {
     chat: {
         id: number
     }
+}
+
+type ProjectListOptions = {
+    page?: number
+    limit?: number
+    search?: string
+    order?: string
+}
+
+type ProjectListResult = {
+    projects: Project[]
+    page: number
+    limit: number
+    total: number
+    totalPages: number
 }
 
 export default class ProjectService {
@@ -84,13 +100,44 @@ export default class ProjectService {
         }
     }
 
-    public async get_projects_list(userId: number): Promise<Array<Project>> {
-        const projects = await Project.findAll({ where: { ownerId: userId }, order: [['created_at', 'DESC']] })
-        if(!projects) {
-            throw new NotFoundException('Projects not found')
+    public async getProjectsList(userId: number, options?: ProjectListOptions): Promise<ProjectListResult> {
+        const page = options?.page && options.page > 0 ? options.page : 1
+        const limit = options?.limit && options.limit > 0 && options.limit <= 100 
+            ? options.limit
+            : 20
+        const search = options?.search?.trim() || undefined
+        const order: 'ASC' | 'DESC' =
+            options?.order === 'ASC' || options?.order === 'DESC'
+                ? options.order
+                : 'DESC'
+
+        const offset = (page - 1) * limit
+
+        const where: any = { ownerId: userId }
+
+        if(search) {
+            where[Op.or] = [
+                { name: { [Op.iLike]: `%${search}%` } },
+                { description: { [Op.iLike]: `%${search}%` } }
+            ]
         }
 
-        return projects
+        const { rows, count } = await Project.findAndCountAll({ 
+            where, 
+            order: [['created_at', order]],
+            limit,
+            offset,
+        })
+
+        const totalPages = Math.ceil(count / limit) || 1
+
+        return {
+            projects: rows,
+            page,
+            limit,
+            total: count,
+            totalPages
+        }
     }
 
     public async create_project(userId: number, { name, description }: ProjectCreateData): Promise<Project> {

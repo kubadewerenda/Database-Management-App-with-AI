@@ -263,7 +263,6 @@ export default class DbConnectionService {
             dbConn = await DbConnection.create(payload as any)
         }
 
-        // TODO: Dodac schemat itp itd
         const snapshot = await this._load_schema_snapshot(connectionString)
         await this._upsert_schema_cache(dbConn.id, snapshot)
 
