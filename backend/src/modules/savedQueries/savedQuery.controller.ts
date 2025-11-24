@@ -1,19 +1,19 @@
 import { Request, Response } from 'express'
 import Controller from '../../controllers/main.controller.js'
-import QueryService from './query.service.js'
+import SavedQueryService from './savedQuery.service.js'
 
 import * as userMd from '../../middlewares/users/user.middleware.js'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware.js'
 import { projectIdSchema } from '../projects/project.validation.js'
-import { querySchema, savedQueryIdSchema, savedQueryListInfiniteSchema, savedQuerySchema, savedQueryUpdateSchema } from './query.validation.js'
+import { savedQueryIdSchema, savedQueryListInfiniteSchema, savedQuerySchema, savedQueryUpdateSchema } from './savedQuery.validation.js'
 
 
-class QueryController extends Controller {
-    private queryService: QueryService
+class SavedQueryController extends Controller {
+    private savedQueryService: SavedQueryService
 
     constructor() {
         super()
-        this.queryService = new QueryService()
+        this.savedQueryService = new SavedQueryService()
     }
 
     private async addSavedQuery(req: Request, res: Response) {
@@ -25,7 +25,7 @@ class QueryController extends Controller {
 
         const userId = req.user!.id
 
-        await this.queryService.addSavedQuery(
+        await this.savedQueryService.addSavedQuery(
             projectId.data,
             userId,
             parsedBody.data
@@ -45,7 +45,7 @@ class QueryController extends Controller {
 
         const userId = req.user!.id
 
-        const savedQuery = await this.queryService.getSavedQuery(
+        const savedQuery = await this.savedQueryService.getSavedQuery(
             projectId.data,
             userId,
             savedQueryId.data
@@ -66,7 +66,7 @@ class QueryController extends Controller {
 
         const userId = req.user!.id
 
-        await this.queryService.updateSavedQuery(
+        await this.savedQueryService.updateSavedQuery(
             projectId.data,
             userId,
             savedQueryId.data,
@@ -87,7 +87,7 @@ class QueryController extends Controller {
 
         const userId = req.user!.id
 
-        await this.queryService.deleteSavedQuery(
+        await this.savedQueryService.deleteSavedQuery(
             projectId.data,
             userId,
             savedQueryId.data
@@ -105,7 +105,7 @@ class QueryController extends Controller {
 
         const userId = req.user!.id
 
-        const result = await this.queryService.getSavedQueryList(
+        const result = await this.savedQueryService.getSavedQueryList(
             projectId.data,
             userId,
             parsed.data
@@ -120,32 +120,11 @@ class QueryController extends Controller {
 
         const userId = req.user!.id
 
-        const tags = await this.queryService.listProjectTags(projectId.data, userId)
+        const tags = await this.savedQueryService.listProjectTags(projectId.data, userId)
 
         return res.status(200).json({ ...tags })
     }
     
-    private async execute_query(req: Request, res: Response) {
-        const projectId = projectIdSchema.safeParse(req.params.projectId)
-        if(!projectId.success) throw projectId.error
-
-        const parsedBody = querySchema.safeParse(req.body)
-        if(!parsedBody.success) throw parsedBody.error
-
-        const userId = req.user!.id
-
-        const result = await this.queryService.executeForProject(
-            projectId.data,
-            userId,
-            parsedBody.data
-        )
-
-        return res.status(200).json({
-            message: 'Query executed successfully.',
-            ...result,
-        })
-    }
-
     public routes(): void {
         this.router.post('/:projectId/query/saved', userMd.isAuthenticated, asyncHandler(this.addSavedQuery.bind(this)))
         this.router.get('/:projectId/query/saved', userMd.isAuthenticated, asyncHandler(this.listSavedQueriesInfinite.bind(this)))
@@ -154,9 +133,7 @@ class QueryController extends Controller {
         this.router.delete('/:projectId/query/saved/:savedQueryId', userMd.isAuthenticated, asyncHandler(this.deleteSavedQuery.bind(this)))
         
         this.router.get('/:projectId/query/tags', userMd.isAuthenticated, asyncHandler(this.listProjectTags.bind(this)))
-
-        this.router.post('/:projectId/query/execute', userMd.isAuthenticated, asyncHandler(this.execute_query.bind(this)))
     }
 }
 
-export default new QueryController().router
+export default new SavedQueryController().router

@@ -1,6 +1,14 @@
 import {
-    Table, Model, Column, DataType, PrimaryKey, AutoIncrement, AllowNull,
-    ForeignKey, BelongsTo, Index
+    Table, 
+    Model, 
+    Column, 
+    DataType, 
+    PrimaryKey, 
+    AutoIncrement, 
+    AllowNull,
+    ForeignKey, 
+    BelongsTo, 
+    Index
 } from 'sequelize-typescript'
 import Project from '../projects/project.model.js'
 import DbConnection from '../projects/connection.model.js'
@@ -8,7 +16,10 @@ import DbConnection from '../projects/connection.model.js'
 @Table({
     tableName: 'executions',
     timestamps: true,
-    indexes: [{ fields: ['project_id'] }, { fields: ['connection_id'] }],
+    indexes: [
+        { fields: ['project_id'] },
+        { fields: ['connection_id'] }
+    ],
 })
 export default class Execution extends Model<Execution> {
     @PrimaryKey
@@ -44,9 +55,17 @@ export default class Execution extends Model<Execution> {
     @Column(DataType.JSONB)
     explained!: unknown | null
 
-    @BelongsTo(() => Project, { as: 'project' })
+    @BelongsTo(() => Project, {
+        as: 'project',
+        onDelete: 'CASCADE',
+        hooks: true,
+    })
     project!: Project
 
-    @BelongsTo(() => DbConnection, { as: 'connection' })
+    @BelongsTo(() => DbConnection, {
+        as: 'connection',
+        onDelete: 'CASCADE',
+        hooks: true,
+    })
     connection!: DbConnection
 }

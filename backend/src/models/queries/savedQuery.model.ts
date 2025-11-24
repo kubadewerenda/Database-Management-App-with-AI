@@ -1,6 +1,15 @@
 import {
-    Table, Model, Column, DataType, PrimaryKey, AutoIncrement, AllowNull,
-    ForeignKey, BelongsTo, BelongsToMany, HasMany, Index
+    Table, 
+    Model, 
+    Column, 
+    DataType, 
+    PrimaryKey, 
+    AutoIncrement, 
+    AllowNull,
+    ForeignKey, 
+    BelongsTo, 
+    BelongsToMany, 
+    Index
 } from 'sequelize-typescript'
 import Project from '../projects/project.model.js'
 import Tag from './tag.model.js'
@@ -9,7 +18,10 @@ import SavedQueryTag from './savedQueryTag.model.js'
 @Table({
     tableName: 'saved_queries',
     timestamps: true,
-    indexes: [{ fields: ['project_id'] }, { fields: ['name'] }],
+    indexes: [
+        { fields: ['project_id'] }, 
+        { fields: ['name'] }
+    ],
 })
 export default class SavedQuery extends Model<SavedQuery> {
     @PrimaryKey
@@ -24,6 +36,7 @@ export default class SavedQuery extends Model<SavedQuery> {
     projectId!: number
 
     @AllowNull(false)
+    @Index
     @Column(DataType.STRING)
     name!: string
 
@@ -35,7 +48,11 @@ export default class SavedQuery extends Model<SavedQuery> {
     @Column(DataType.TEXT)
     sql!: string
 
-    @BelongsTo(() => Project, { as: 'project' })
+    @BelongsTo(() => Project, {
+        as: 'project',
+        onDelete: 'CASCADE',
+        hooks: true,
+    })
     project!: Project
 
     @BelongsToMany(() => Tag, () => SavedQueryTag, 'savedQueryId', 'tagId')

@@ -5,8 +5,6 @@ import Project from '../../models/projects/project.model.js'
 
 import * as userMd from '../../middlewares/users/user.middleware.js'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware.js'
-import { BadRequestException, UnauthorizedException } from '../../lib/errors.js'
-import { ErrorCodeEnum } from '../../enums/error-code.enum.js'
 
 import { projectIdSchema, projectCreateSchema, projectUpdateSchema, projectListPaginationSchema } from './project.validation.js'
 
@@ -19,13 +17,13 @@ class ProjectController extends Controller {
         this.projectService = new ProjectService()
     }
 
-    private async get_project(req: Request, res: Response) {
+    private async getProject(req: Request, res: Response) {
         const projectId = projectIdSchema.safeParse(req.params.projectId)
         if(!projectId.success) throw projectId.error
 
         const userId = req.user!.id
 
-        const project: Project = await this.projectService.get_project(userId, projectId.data)
+        const project: Project = await this.projectService.getProject(projectId.data, userId)
 
         return res.status(200).json({ project })
     }
@@ -36,12 +34,12 @@ class ProjectController extends Controller {
 
         const userId = req.user!.id
 
-        const projectOverview = await this.projectService.getProjectOverview(userId, projectId.data)
+        const projectOverview = await this.projectService.getProjectOverview(projectId.data, userId)
 
         return res.status(200).json({ projectOverview })
     }
 
-    private async get_projects_list(req: Request, res: Response) {
+    private async getProjectsList(req: Request, res: Response) {
         const userId = req.user!.id
 
         const parsedOptions = projectListPaginationSchema.safeParse(req.query)
@@ -62,23 +60,21 @@ class ProjectController extends Controller {
         return res.status(200).json(result)
     }
 
-    private async create_project(req: Request, res: Response) {
-        const parsed = projectCreateSchema.safeParse(req.body)
-        if(!parsed.success) throw parsed.error
+    private async createProject(req: Request, res: Response) {
+        const parsedBody = projectCreateSchema.safeParse(req.body)
+        if(!parsedBody.success) throw parsedBody.error
 
         const userId = req.user!.id
 
-        const project = await this.projectService.create_project(userId, parsed.data)
+        const project = await this.projectService.createProject(userId, parsedBody.data)
 
-        return res.status(201).json(
-            { 
+        return res.status(201).json({ 
                 message: 'Project created successfully.',
                 project: project
-            }
-        )
+        })
     }
 
-    private async update_project(req: Request, res: Response) {
+    private async updateProject(req: Request, res: Response) {
         const projectId = projectIdSchema.safeParse(req.params.projectId)
         if(!projectId.success) throw projectId.error
 
@@ -87,7 +83,7 @@ class ProjectController extends Controller {
 
         const userId = req.user!.id
 
-        const project = await this.projectService.update_project(userId, projectId.data, parsedData.data)
+        const project = await this.projectService.updateProject(projectId.data, userId, parsedData.data)
 
         return res.status(200).json({
             message: 'Project updated successfully',
@@ -95,24 +91,24 @@ class ProjectController extends Controller {
         })
     }
 
-    private async delete_project(req: Request, res: Response) {
+    private async deleteProject(req: Request, res: Response) {
         const projectId = projectIdSchema.safeParse(req.params.projectId)
         if(!projectId.success) throw projectId.error
 
         const userId = req.user!.id
 
-        await this.projectService.delete_project(userId, projectId.data)
+        await this.projectService.deleteProject(projectId.data, userId)
 
         return res.status(200).json({ message: 'Project deleted successfully.'})
     }
 
     public routes(): void {
-        this.router.get('/', userMd.isAuthenticated, asyncHandler(this.get_projects_list.bind(this)))
-        this.router.get('/:projectId', userMd.isAuthenticated, asyncHandler(this.get_project.bind(this)))
+        this.router.get('/', userMd.isAuthenticated, asyncHandler(this.getProjectsList.bind(this)))
+        this.router.get('/:projectId', userMd.isAuthenticated, asyncHandler(this.getProject.bind(this)))
         this.router.get('/:projectId/overview', userMd.isAuthenticated, asyncHandler(this.getProjectOverview.bind(this)))
-        this.router.post('/', userMd.isAuthenticated, asyncHandler(this.create_project.bind(this)))
-        this.router.patch('/:projectId', userMd.isAuthenticated, asyncHandler(this.update_project.bind(this)))
-        this.router.delete('/:projectId', userMd.isAuthenticated, asyncHandler(this.delete_project.bind(this)))
+        this.router.post('/', userMd.isAuthenticated, asyncHandler(this.createProject.bind(this)))
+        this.router.patch('/:projectId', userMd.isAuthenticated, asyncHandler(this.updateProject.bind(this)))
+        this.router.delete('/:projectId', userMd.isAuthenticated, asyncHandler(this.deleteProject.bind(this)))
     }
 }
 

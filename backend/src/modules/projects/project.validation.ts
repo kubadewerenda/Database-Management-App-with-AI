@@ -8,7 +8,12 @@ export const projectIdSchema = z
 export const projectCreateSchema = z
     .object({
         name: z.string().trim().min(1, 'Name is required').max(255),
-        description: z.string().trim().max(2000).optional()
+        description: z.string().trim().max(2000).optional(),
+        color: z
+            .string()
+            .trim()
+            .regex(/^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/, 'Invalid hex color')
+            .optional()
     })
 
 export const projectUpdateSchema = projectCreateSchema.partial()
@@ -21,5 +26,5 @@ export const projectListPaginationSchema = z
         order: z
             .enum(['asc', 'desc', 'ASC', 'DESC'])
             .optional()
-            .transform(v => v?.toUpperCase() as 'ASC' | 'DESC' | undefined),
+            .transform(v => (v ? v.toUpperCase() as 'ASC' | 'DESC' : 'DESC')),
     })

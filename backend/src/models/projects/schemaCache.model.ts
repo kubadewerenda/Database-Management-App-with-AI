@@ -1,6 +1,14 @@
 import {
-    Table, Model, Column, DataType, PrimaryKey, AutoIncrement, AllowNull,
-    ForeignKey, BelongsTo, Unique
+    Table,
+    Model,
+    Column,
+    DataType,
+    PrimaryKey,
+    AutoIncrement,
+    AllowNull,
+    ForeignKey,
+    BelongsTo,
+    Unique,
 } from 'sequelize-typescript'
 import DbConnection from './connection.model.js'
 import type { DbSchemaSnapshot } from '../../types/schemaCache/schemaCache.js'
@@ -30,6 +38,10 @@ export default class SchemaCache extends Model<SchemaCache> {
     @Column({ field: 'tables', type: DataType.JSONB })
     tables!: DbSchemaSnapshot['tables']
 
-    @BelongsTo(() => DbConnection, { as: 'connection' })
+    @BelongsTo(() => DbConnection, {
+        as: 'connection',
+        onDelete: 'CASCADE',
+        hooks: true,
+    })
     connection!: DbConnection
 }

@@ -104,10 +104,6 @@ export default class ChatService {
     public async getOrCreateChatForProject(
         projectId: number, 
         userId: number,
-        options?: { 
-            limit?: number,
-            beforeId?: number
-        }
     ): Promise<Chat> {
         return this._getOrCreateChat(projectId, userId)
     }

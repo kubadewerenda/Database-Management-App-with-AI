@@ -1,14 +1,26 @@
 import {
-    Table, Model, Column, DataType, PrimaryKey, AutoIncrement, AllowNull,
-    ForeignKey, BelongsTo, HasMany, Index
+    Table,
+    Model,
+    Column,
+    DataType,
+    PrimaryKey,
+    AutoIncrement,
+    AllowNull,
+    ForeignKey,
+    BelongsTo,
+    HasOne,
+    Index,
+    Default,
 } from 'sequelize-typescript'
 import User from '../users/user.model.js'
+import DbConnection from './connection.model.js'
 
 @Table({
     tableName: 'projects',
     timestamps: true,
     indexes: [
         { fields: ['owner_id'] },
+        { fields: ['created_at'] },
         { fields: ['is_active'] },
     ],  
 })
@@ -27,10 +39,12 @@ export default class Project extends Model<Project> {
     description!: string | null
 
     @AllowNull(true)
+    @Default('#3b82f6')
     @Column({ type: DataType.STRING })
     color!: string | null
 
     @AllowNull(false)
+    @Index
     @Column({ field: 'is_active', type: DataType.BOOLEAN, defaultValue: false })
     isActive!: boolean
 
@@ -42,4 +56,12 @@ export default class Project extends Model<Project> {
 
     @BelongsTo(() => User, { as: 'owner' })
     owner!: User
+
+    @HasOne(() => DbConnection, {
+        as: 'dbConnection',
+        foreignKey: 'projectId',
+        onDelete: 'CASCADE',
+        hooks: true,
+    })
+    dbConnection!: DbConnection
 }

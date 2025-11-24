@@ -1,8 +1,6 @@
-import User from '../../models/users/user.model.js'
 import Project from '../../models/projects/project.model.js'
-import { AuthProvider, UserRole, UserStatus } from '../../enums/users/user.enum.js'
-import { BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException} from '../../lib/errors.js'
-import { ErrorCodeEnum } from '../../enums/error-code.enum.js'
+import { BadRequestException, ForbiddenException } from '../../lib/errors.js'
+import * as helpFunctions from '../../lib/utils/functions.js'
 import { Op } from 'sequelize'
 
 import { DbSchemaSnapshot } from '../../types/schemaCache/schemaCache.js'
@@ -13,15 +11,22 @@ import ChatService from '../chats/chat.service.js'
 type ProjectCreateData = {
     name: string,
     description?: string | null
+    color?: string | null
 }
 
 type ProjectUpdateData = {
     name?: string,
     description?: string | null
+    color?: string | null
 }
 
 type ProjectOverview = {
+    message: string,
     project: Project,
+    dbConnection: {
+        connected: string
+        latencyMs: number | null
+    }
     schema: DbSchemaSnapshot,
     chat: {
         id: number
@@ -51,49 +56,50 @@ export default class ProjectService {
         this.dbConnectionService = new DbConnectionService()
         this.chatService = new ChatService()
     }
-    private async _findOwned(userId: number, projectId: number) {
-        const project = await Project.findByPk(projectId)
-        if(!project) {
-            throw new NotFoundException('Project not found.')
-        }
-
-        if(project.ownerId !== userId) {
-            throw new ForbiddenException('You do not have perrmissions to this project.')
-        }
-
-        return project
+    private async _findOwned(projectId: number, userId: number) {
+        return await helpFunctions._ensureProjectOwned(projectId, userId)
     }
 
-    public async get_project(userId: number, projectId: number): Promise<Project> {
-        const project = await this._findOwned(userId, projectId)
+    public async getProject(projectId: number, userId: number): Promise<Project> {
+        const project = await this._findOwned(projectId, userId)
         
         return project
     }
 
-    public async getProjectOverview(userId: number, projectId: number): Promise<ProjectOverview> {
-        const project = await this._findOwned(userId, projectId)
+    public async getProjectOverview(projectId: number, userId: number): Promise<ProjectOverview> {
+        const project = await this._findOwned(projectId, userId)
 
-        // TODO: zmodyfikowac, to ma tylko rzucac wyjatek
-        const dbConnectionTest = await this.dbConnectionService.testSavedConnection(
-            project.id,
-            userId
-        )
+        let dbConnection = null
+        try {
+            dbConnection = await this.dbConnectionService.testSavedConnection(
+                project.id,
+                userId
+            )
+        } catch {}
 
-        const schema = await this.dbConnectionService.getSchemaSnapshotForProject(
-            project.id,
-            userId
-        )
+        let schema = null
+        try {
+            schema = await this.dbConnectionService.getSchemaSnapshotForProject(
+                project.id,
+                userId
+            )
+        } catch {}
 
         const chat = await this.chatService.getOrCreateChatForProject(
             project.id,
             userId
         )
 
-        // TODO: dodac title chatu
-
         return {
+            message: dbConnection && schema 
+                ? 'Project ready to work.'
+                : 'Project need to be connected to database.',
             project,
-            schema,
+            dbConnection: {
+                connected: dbConnection?.latencyMs ? 'yes' : 'no',
+                latencyMs: dbConnection?.latencyMs ?? null
+            },
+            schema: schema ?? { tables: [] },
             chat : {
                 id: chat.id
             }
@@ -140,26 +146,23 @@ export default class ProjectService {
         }
     }
 
-    public async create_project(userId: number, { name, description }: ProjectCreateData): Promise<Project> {
+    public async createProject(userId: number, { name, description, color }: ProjectCreateData) {
         if(!name) {
             throw new BadRequestException('Project name is required.')
         }
 
-        const project = await Project.create({
+        return await Project.create({
             name,
             description: description ?? null,
+            color: color ?? null,
+            isActive: false,
             ownerId: userId
-        }as any)
-
-        return project
+        } as any)
     }
 
-    public async update_project(userId: number, projectId: number, { name, description }: ProjectUpdateData): Promise<Project> {
-        const project = await this._findOwned(userId, projectId)
-        if(!project) {
-            throw new NotFoundException('Project not found.')
-        }
-
+    public async updateProject(projectId: number, userId: number, { name, description, color }: ProjectUpdateData): Promise<Project> {
+        const project = await this._findOwned(projectId, userId)
+        
         if(project.ownerId !== userId) {
             throw new ForbiddenException('You do not have perrmissions to this project.')
         }
@@ -172,16 +175,17 @@ export default class ProjectService {
             project.description = description
         }
 
+        if(color !== undefined) {
+            project.color = color
+        }
+
         await project.save()
 
         return project
     }
 
-    public async delete_project(userId: number, projectId: number) {
-        const project = await this._findOwned(userId, projectId)
-        if(!project) {
-            throw new NotFoundException('Project not found.')
-        }
+    public async deleteProject(projectId: number, userId: number) {
+        const project = await this._findOwned(projectId, userId)
 
         if(project.ownerId !== userId) {
             throw new ForbiddenException('You do not have perrmissions to this project.')
