@@ -8,7 +8,7 @@ import { asyncHandler } from '../../middlewares/asyncHandler.middleware.js'
 import { BadRequestException, UnauthorizedException } from '../../lib/errors.js'
 import { ErrorCodeEnum } from '../../enums/error-code.enum.js'
 
-import { projectIdSchema, projectCreateSchema, projectUpdateSchema } from './project.validation.js'
+import { projectIdSchema, projectCreateSchema, projectUpdateSchema, projectListPaginationSchema } from './project.validation.js'
 
 
 class ProjectController extends Controller {
@@ -44,9 +44,22 @@ class ProjectController extends Controller {
     private async get_projects_list(req: Request, res: Response) {
         const userId = req.user!.id
 
-        const projects: Array<Project> = await this.projectService.get_projects_list(userId) 
+        const parsedOptions = projectListPaginationSchema.safeParse(req.query)
+        if(!parsedOptions.success) throw parsedOptions.error
 
-        return res.status(200).json({ projects })
+        const { page, limit, search, order } = parsedOptions.data
+
+        const result = await this.projectService.getProjectsList(
+            userId, 
+            {
+                page,
+                limit,
+                search,
+                order
+            }
+        )
+
+        return res.status(200).json(result)
     }
 
     private async create_project(req: Request, res: Response) {
@@ -92,9 +105,6 @@ class ProjectController extends Controller {
 
         return res.status(200).json({ message: 'Project deleted successfully.'})
     }
-
-    // TODO: dodac giga overview ktore zwraca wszystko o projekcie,
-    // TODO: przy tworzeniu musi dodatkowo: tworzyc chat projektu
 
     public routes(): void {
         this.router.get('/', userMd.isAuthenticated, asyncHandler(this.get_projects_list.bind(this)))
