@@ -29,7 +29,7 @@ const Dashboard = () => {
         />
 
         <div className="flex-1 overflow-hidden">
-          <div className="flex h-full min-h-0 flex-col rounded-xl border border-neutral-200/20 bg-neutral-900 p-6">
+          <div className="flex h-full min-h-0 flex-col rounded-xl border border-neutral-200/20 bg-neutral-900 p-3">
             <Outlet context={{ refreshTrigger }} />
           </div>
         </div>

@@ -4,3 +4,35 @@ body {
   @apply bg-neutral-950;
   font-family: "Lato", sans-serif;
 }
+
+
+/* --- Konfiguracja dla Chrome, Edge, Safari --- */
+
+/* 1. Szerokość całego paska (dla pionowego) i wysokość (dla poziomego) */
+::-webkit-scrollbar {
+  width: 6px;  /* Bardzo cienki */
+  height: 6px;
+}
+
+/* 2. Tło paska (ścieżka, po której jeździ) - przezroczyste */
+::-webkit-scrollbar-track {
+  background: transparent; 
+}
+
+/* 3. Sam "suwak" (ten element, który przesuwasz) */
+::-webkit-scrollbar-thumb {
+  background-color: #b15819; /* To jest kolor orange-500 z Tailwinda */
+  border-radius: 10px;       /* Zaokrąglone rogi */
+}
+
+/* Opcjonalnie: zmiana koloru po najechaniu myszką */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #b15819; /* Ciemniejszy pomarańczowy (orange-600) */
+}
+
+
+/* --- Konfiguracja dla Firefoxa (on używa innej składni) --- */
+* {
+  scrollbar-width: thin;          /* Cienki pasek */
+  scrollbar-color: #b15819 transparent; /* Kolor suwaka | Kolor tła */
+}

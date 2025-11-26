@@ -108,7 +108,7 @@ const ProjectList = () => {
               className="relative p-1"
             >
               {isSortIconHovering && (
-                <div className="absolute top-7 -right-10 text-neutral-400 bg-neutral-900/90 z-50 border border-neutral-400/30 p-4 rounded-2xl w-50 flex flex-col items-center gap-3">
+                <div className="absolute top-7 -right-8 text-neutral-400 bg-neutral-900/90 z-50 border border-neutral-400/30 p-4 rounded-2xl w-50 flex flex-col items-center gap-3">
                   <p className="font-semibold">Sortowanie</p>
                   <div className="h-px w-36 bg-neutral-600"></div>
                   <div className="font-semibold flex flex-col gap-1">

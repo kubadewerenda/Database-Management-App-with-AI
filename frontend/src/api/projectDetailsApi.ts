@@ -1,5 +1,25 @@
 const API_URL = "http://localhost:8000";
 
+export const fetchProject = async (id: number) => {
+  try {
+    const response = await fetch(`${API_URL}/project/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      return data;
+    }
+    return data;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 export const sendConnectionString = async (
   id: number,
   connectionString: string
@@ -20,6 +40,23 @@ export const sendConnectionString = async (
 
     const data = await response.json();
 
+    if (!response.ok) {
+      return data;
+    }
+    return data;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const projectOverview = async (id: number) => {
+  try {
+    const response = await fetch(`${API_URL}/project/${id}/overview`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    const data = await response.json();
     if (!response.ok) {
       return data;
     }
