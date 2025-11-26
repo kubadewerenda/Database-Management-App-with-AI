@@ -1,5 +1,6 @@
 const API_URL = "http://localhost:8000";
 
+
 export const deleteProject = async (projectId: number) => {
   try {
     const response = await fetch(`${API_URL}/project/${projectId}`, {
