@@ -9,17 +9,21 @@ import {
     ForeignKey,
     BelongsTo,
     HasMany,
-    Index
+    Index,
+    Default,
 } from 'sequelize-typescript'
 import Project from '../projects/project.model.js'
-import Message from './message.model.js'
+import Execution from '../queries/execution.model.js'
 
 @Table({
-    tableName: 'chats',
+    tableName: 'executors',
     timestamps: true,
-    indexes: [{ fields: ['project_id'] }],
+    indexes: [
+        { fields: ['project_id'] },
+        { unique: true, fields: ['project_id', 'name'] },
+    ],
 })
-export default class Chat extends Model<Chat> {
+export default class Executor extends Model<Executor> {
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.BIGINT)
@@ -31,20 +35,22 @@ export default class Chat extends Model<Chat> {
     @Column({ field: 'project_id', type: DataType.BIGINT })
     projectId!: number
 
-    // TODO: wywalic na final
-    @AllowNull(true)
+    @AllowNull(false)
     @Column(DataType.STRING)
-    title!: string | null
+    name!: string
 
-    @BelongsTo(() => Project, {
-        as: 'project',
-    })
+    @AllowNull(false)
+    @Default(false)
+    @Column({ field: 'is_pinned', type: DataType.BOOLEAN })
+    isPinned!: boolean
+
+    @BelongsTo(() => Project, { as: 'project' })
     project!: Project
 
-    @HasMany(() => Message, {
-        foreignKey: 'chatId',
+    @HasMany(() => Execution, {
+        foreignKey: 'executorId',
         onDelete: 'CASCADE',
         hooks: true,
     })
-    messages!: Message[]
+    executions!: Execution[]
 }

@@ -40,8 +40,6 @@ export default class SchemaCache extends Model<SchemaCache> {
 
     @BelongsTo(() => DbConnection, {
         as: 'connection',
-        onDelete: 'CASCADE',
-        hooks: true,
     })
     connection!: DbConnection
 }

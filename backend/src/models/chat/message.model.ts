@@ -48,8 +48,6 @@ export default class Message extends Model<Message> {
 
     @BelongsTo(() => Chat, {
         as: 'chat',
-        onDelete: 'CASCADE',
-        hooks: true,
     })
     chat!: Chat
 }

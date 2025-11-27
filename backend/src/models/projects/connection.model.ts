@@ -67,14 +67,11 @@ export default class DbConnection extends Model<DbConnection> {
     readOnly!: boolean
 
     @BelongsTo(() => Project, {
-        as: 'project',
-        onDelete: 'CASCADE',  
-        hooks: true,
+        as: 'project', 
     })
     project!: Project
 
     @HasOne(() => SchemaCache, {
-        as: 'schemaCache',
         foreignKey: 'connectionId',
         onDelete: 'CASCADE',
         hooks: true,
