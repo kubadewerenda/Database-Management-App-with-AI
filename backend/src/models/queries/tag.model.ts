@@ -41,15 +41,12 @@ export default class Tag extends Model<Tag> {
     projectId!: number
 
     @AllowNull(false)
-    @Unique
     @Index
     @Column(DataType.STRING)
     name!: string
 
     @BelongsTo(() => Project, {
         as: 'project',
-        onDelete: 'CASCADE',
-        hooks: true,
     })
     project!: Project
 

@@ -12,6 +12,7 @@ import {
 } from 'sequelize-typescript'
 import Project from '../projects/project.model.js'
 import DbConnection from '../projects/connection.model.js'
+import Executor from '../executors/executor.model.js'
 
 @Table({
     tableName: 'executions',
@@ -39,6 +40,12 @@ export default class Execution extends Model<Execution> {
     @Column({ field: 'connection_id', type: DataType.BIGINT })
     connectionId!: number
 
+    @ForeignKey(() => Executor)
+    @AllowNull(true)          // TODO: tutaj zmienic zeby nie moglo byc null na final
+    @Index
+    @Column({ field: 'executor_id', type: DataType.BIGINT })
+    executorId!: number | null
+
     @AllowNull(false)
     @Column(DataType.TEXT)
     sql!: string
@@ -57,15 +64,17 @@ export default class Execution extends Model<Execution> {
 
     @BelongsTo(() => Project, {
         as: 'project',
-        onDelete: 'CASCADE',
-        hooks: true,
     })
     project!: Project
 
     @BelongsTo(() => DbConnection, {
         as: 'connection',
-        onDelete: 'CASCADE',
-        hooks: true,
     })
     connection!: DbConnection
+
+    @BelongsTo(() => Executor, {
+        as: 'executor',
+        onDelete: 'CASCADE',
+    })
+    executor!: Executor
 }

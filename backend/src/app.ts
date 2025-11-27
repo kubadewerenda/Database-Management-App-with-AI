@@ -13,7 +13,7 @@ import ProjectController from './modules/projects/project.controller.js'
 import DbConnectionController from './modules/dbconnections/dbConnection.controller.js'
 import SavedQueryController from './modules/savedQueries/savedQuery.controller.js'
 import ChatController from './modules/chats/chat.controller.js'
-import ExecutionQueryController from './modules/executionQueries/executionQuery.controller.js'
+import ExecutionQueryController from './modules/executors/executor.controller.js'
 
 export class App {
     private app: Application

@@ -11,9 +11,14 @@ import {
     HasOne,
     Index,
     Default,
+    HasMany,
 } from 'sequelize-typescript'
 import User from '../users/user.model.js'
 import DbConnection from './connection.model.js'
+import Chat from '../chat/chat.model.js'
+import Executor from '../executors/executor.model.js'
+import SavedQuery from '../queries/savedQuery.model.js'
+import Tag from '../queries/tag.model.js'
 
 @Table({
     tableName: 'projects',
@@ -58,10 +63,37 @@ export default class Project extends Model<Project> {
     owner!: User
 
     @HasOne(() => DbConnection, {
-        as: 'dbConnection',
         foreignKey: 'projectId',
         onDelete: 'CASCADE',
         hooks: true,
     })
     dbConnection!: DbConnection
+
+    @HasMany(() => Chat, {
+        foreignKey: 'projectId',
+        onDelete: 'CASCADE',
+        hooks: true,
+    })
+    chat!: Chat
+
+    @HasMany(() => Executor, {
+        foreignKey: 'projectId',
+        onDelete: 'CASCADE',
+        hooks: true,
+    })
+    executors!: Executor[]
+
+    @HasMany(() => SavedQuery, {
+        foreignKey: 'projectId',
+        onDelete: 'CASCADE',
+        hooks: true,
+    })
+    savedQueries!: SavedQuery[]
+
+    @HasMany(() => Tag, {
+        foreignKey: 'projectId',
+        onDelete: 'CASCADE',
+        hooks: true,
+    })
+    tags!: Tag[]
 }

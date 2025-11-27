@@ -50,8 +50,6 @@ export default class SavedQuery extends Model<SavedQuery> {
 
     @BelongsTo(() => Project, {
         as: 'project',
-        onDelete: 'CASCADE',
-        hooks: true,
     })
     project!: Project
 
