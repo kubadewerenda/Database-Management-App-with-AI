@@ -1,19 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { sendConnectionString } from "../../api/projectDetailsApi";
-
-// type DbSchema = {
-//   name: string;
-//   schema: string;
-//   columns: {
-//     name: string;
-//     dataType: string;
-//     isNullable: string;
-//     defaultValue: boolean;
-//     isForeignKey: boolean;
-//   }[];
-//   commend: string;
-// };
+import { useNavigate } from "react-router-dom";
+import { FaBackward } from "react-icons/fa6";
+import { fetchProject } from "../../api/projectDetailsApi";
+import { PuffLoader } from "react-spinners";
 
 const DbConnection = ({
   setIsConnected,
@@ -22,64 +13,102 @@ const DbConnection = ({
 }) => {
   const [connectionString, setConnectionString] = useState("");
   const [message, setMessage] = useState("");
-  // const [database, setDatabase] = useState<DbSchema[]>([]);
+  const [projectName, setProjectName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const { projectId } = useParams();
   const id = Number(projectId);
 
-  // const handleFetchingData = async () => {
-  //   const response = await projectOverview(id);
-  //   console.log(response.projectOverview.schema.tables);
-  //   setDatabase(response.projectOverview.schema.tables);
-  // };
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const getData = async () => {
+      const response = await fetchProject(id);
+      console.log(response.project.name);
+      setProjectName(response.project.name);
+    };
+    getData();
+  }, [id]);
 
   const handleSendConnectionString = async () => {
     if (connectionString.trim().length <= 0) {
       setMessage("Podaj connection string");
       return;
     }
-    const response = await sendConnectionString(id, connectionString);
+    setIsLoading(true);
+    try {
+      const response = await sendConnectionString(id, connectionString);
 
-    console.log(response);
-
-    if (response.message === "Invalid connection string.") {
-      setMessage("Błedny connection string");
-    }
-    if (response.message === "Database connected successfully.") {
-      setMessage("Połączono");
-      setIsConnected(true);
+      if (response.message === "Invalid connection string.") {
+        setMessage("Błedny connection string");
+      }
+      if (response.message === "Database connected successfully.") {
+        setMessage("Połączono");
+        setIsConnected(true);
+      }
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-emerald-500">
-      <div className="flex gap-2">
-        <label htmlFor="connection-string">Connection string</label>
-        <input
-          value={connectionString}
-          onChange={(e) => setConnectionString(e.target.value)}
-          id="connection-string"
-          type="text"
-          className="bg-white text-black"
-        />
-        <p>{projectId}</p>
-        <button onClick={handleSendConnectionString}>wyslij</button>
-        {message && <p>{message}</p>}
-        {/* <button onClick={handleFetchingData}>pobierz</button> */}
-      </div>
+    <div className="h-full w-full flex flex-col  justify-center">
+      <div className="flex items-center justify-between px-12 py-4 border-b border-neutral-600">
+        <h2 className="text-2xl text-neutral-300">{projectName}</h2>
 
-      {/* <div className="bg-emerald-700 flex flex-wrap max-w-1/2">
-        {database.map((element, index) => (
-          <div key={index}>
-            <h3>{element.name}</h3>
-            {element.columns.map((element, index) => (
-              <div key={index} className="flex gap-1 bg-slate-900">
-                <p>{element.name}</p>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div> */}
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="rounded-2xl border border-neutral-600 px-4 py-2 text-sm font-semibold text-neutral-200 transition hover:border-orange-500 hover:text-orange-400 hover:cursor-pointer flex items-center gap-2"
+        >
+          <FaBackward />
+          Wróć do listy
+        </button>
+      </div>
+      <div className="flex-1 flex flex-col items-center justify-center gap-6 w-full max-w-4xl mx-auto">
+        <div className="flex flex-col gap-3 w-full">
+          <label
+            htmlFor="connection-string"
+            className="text-xl text-neutral-300"
+          >
+            Connection string
+          </label>
+          <input
+            value={connectionString}
+            onChange={(e) => setConnectionString(e.target.value)}
+            id="connection-string"
+            type="text"
+            placeholder="postgresql://user:password@localhost:5432/mydb"
+            className="outline-none border border-neutral-500/40 bg-neutral-800/80 rounded-2xl px-3 py-2 font-semibold focus:border-orange-400/60 focus:ring-2 focus:ring-orange-500/40 transition text-sm h-13"
+          />
+        </div>
+        <div className="flex flex-col w-full justify-between gap-4 relative">
+          <button
+            onClick={handleSendConnectionString}
+            className="p-2 bg-orange-400/80 border border-orange-800/50 rounded-lg font-semibold self-end hover:cursor-pointer hover:bg-orange-600/80 transition flex items-center gap-2"
+          >
+            <p>Wyślij</p>
+            {isLoading && (
+              <PuffLoader color="#ffffff" speedMultiplier={1} size={25} />
+            )}
+          </button>
+          {message && (
+            <p
+              className={`p-2 border rounded-xl font-semibold ${
+                message === "Podaj connection string" &&
+                "bg-sky-300/20 border-sky-500 text-sky-100"
+              } ${
+                message == "Błedny connection string" &&
+                "bg-red-300/20 border-red-400 text-red-100"
+              }`}
+            >
+              {message}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

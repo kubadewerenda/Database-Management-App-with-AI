@@ -11,6 +11,7 @@ const Projects = ({ onProjectCreated }: ProjectProps) => {
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
   const [error, setError] = useState(false);
+  const [color, setColor] = useState("");
 
   const [isColorPanelOpen, setIsColorPanelOpen] = useState(false);
 
@@ -31,6 +32,7 @@ const Projects = ({ onProjectCreated }: ProjectProps) => {
           body: JSON.stringify({
             name: projectName,
             description: projectDescription,
+            color: color,
           }),
         });
         if (!response.ok) {
@@ -85,10 +87,10 @@ const Projects = ({ onProjectCreated }: ProjectProps) => {
           onMouseEnter={() => setIsColorPanelOpen(true)}
           onMouseLeave={() => setIsColorPanelOpen(false)}
         >
-          <button className="p-2 rounded-xl border border-orange-400/40 hover:cursor-pointer hover:bg-neutral-600 hover:border-neutral-700 transition">
-            {isColorPanelOpen && <ColorPanel />}
+          <div className="p-2 rounded-xl border border-orange-400/40 hover:cursor-pointer hover:bg-neutral-600 hover:border-neutral-700 transition">
+            {isColorPanelOpen && <ColorPanel setColor={setColor} />}
             <IoColorPaletteOutline size={25} className="text-neutral-400" />
-          </button>
+          </div>
         </div>
       </div>
       <div className="flex-end">

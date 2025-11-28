@@ -16,6 +16,8 @@ const ProjectList = () => {
   type ProjectType = {
     id: number;
     name: string;
+    color: string;
+    isActive: boolean;
     description: string | null;
     ownerId: number;
     createdAt: string;
@@ -197,7 +199,13 @@ const ProjectList = () => {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/20 text-lg font-bold text-orange-200">
+                    <span
+                      className="flex h-12 w-12 items-center justify-center rounded-2xl text-lg font-bold"
+                      style={{
+                        backgroundColor: element.color + "33",
+                        color: element.color,
+                      }}
+                    >
                       {initial}
                     </span>
                     <div>
@@ -210,8 +218,17 @@ const ProjectList = () => {
                     </div>
                   </div>
                   <span className="flex items-center gap-2 text-xs font-semibold text-neutral-400">
-                    <span className="h-2.5 w-2.5  rounded-full bg-emerald-400"></span>
-                    Aktywny
+                    {element.isActive ? (
+                      <div className="flex items-center gap-2">
+                        <div className="h-2.5 w-2.5  rounded-full bg-emerald-400"></div>
+                        <p>Aktywny</p>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div className="h-2.5 w-2.5  rounded-full bg-rose-800"></div>
+                        <p>Niepodłączony</p>
+                      </div>
+                    )}
                   </span>
                 </div>
 
