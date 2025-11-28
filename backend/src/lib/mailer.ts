@@ -6,16 +6,6 @@ type MailOptions = {
     html: string
 }
 
-/**
- * Tworzy transport do wysyłki maili na podstawie zmiennych środowiskowych.
- *
- * W .env ustaw:
- *  SMTP_HOST=smtp.gmail.com (albo inny)
- *  SMTP_PORT=587
- *  SMTP_USER=twoj_email@example.com
- *  SMTP_PASS=twoje_haslo_lub_app_password
- *  MAIL_FROM="DBAP App <no-reply@twojadomena.com>"
- */
 function createTransport() {
     const host = process.env.SMTP_HOST
     const port = process.env.SMTP_PORT
