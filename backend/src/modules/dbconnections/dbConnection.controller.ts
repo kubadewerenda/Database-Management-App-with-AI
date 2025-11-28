@@ -69,9 +69,9 @@ class DbConnectionController extends Controller {
     }
     
     public routes(): void {
-        this.router.put('/:projectId/db-connection', userMd.isAuthenticated, asyncHandler(this.upsertConnection.bind(this)))
-        this.router.get('/:projectId/db-connection/test', userMd.isAuthenticated, asyncHandler(this.testConnection.bind(this)))
-        this.router.post('/:projectId/db-connection/schema/refresh', userMd.isAuthenticated, asyncHandler(this.refreshSchema.bind(this)))
+        this.router.put('/:projectId/db-connection', userMd.isUserPermitted, asyncHandler(this.upsertConnection.bind(this)))
+        this.router.get('/:projectId/db-connection/test', userMd.isUserPermitted, asyncHandler(this.testConnection.bind(this)))
+        this.router.post('/:projectId/db-connection/schema/refresh', userMd.isUserPermitted, asyncHandler(this.refreshSchema.bind(this)))
     }
 }
 

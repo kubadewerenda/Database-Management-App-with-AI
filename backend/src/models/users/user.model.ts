@@ -41,6 +41,10 @@ export default class User extends Model<
     declare email: string
 
     @AllowNull(true)
+    @Column(DataType.STRING)
+    declare username: string | null
+
+    @AllowNull(true)
     @Column({ field: 'password_hash', type: DataType.STRING })
     declare passwordHash: string | null
 

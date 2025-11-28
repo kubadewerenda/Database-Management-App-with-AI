@@ -103,12 +103,12 @@ class ProjectController extends Controller {
     }
 
     public routes(): void {
-        this.router.get('/', userMd.isAuthenticated, asyncHandler(this.getProjectsList.bind(this)))
-        this.router.get('/:projectId', userMd.isAuthenticated, asyncHandler(this.getProject.bind(this)))
-        this.router.get('/:projectId/overview', userMd.isAuthenticated, asyncHandler(this.getProjectOverview.bind(this)))
-        this.router.post('/', userMd.isAuthenticated, asyncHandler(this.createProject.bind(this)))
-        this.router.patch('/:projectId', userMd.isAuthenticated, asyncHandler(this.updateProject.bind(this)))
-        this.router.delete('/:projectId', userMd.isAuthenticated, asyncHandler(this.deleteProject.bind(this)))
+        this.router.get('/', userMd.isUserPermitted, asyncHandler(this.getProjectsList.bind(this)))
+        this.router.get('/:projectId', userMd.isUserPermitted, asyncHandler(this.getProject.bind(this)))
+        this.router.get('/:projectId/overview', userMd.isUserPermitted, asyncHandler(this.getProjectOverview.bind(this)))
+        this.router.post('/', userMd.isUserPermitted, asyncHandler(this.createProject.bind(this)))
+        this.router.patch('/:projectId', userMd.isUserPermitted, asyncHandler(this.updateProject.bind(this)))
+        this.router.delete('/:projectId', userMd.isUserPermitted, asyncHandler(this.deleteProject.bind(this)))
     }
 }
 

@@ -142,14 +142,14 @@ class SavedQueryController extends Controller {
     }
     
     public routes(): void {
-        this.router.post('/:projectId/query/saved', userMd.isAuthenticated, asyncHandler(this.addSavedQuery.bind(this)))
-        this.router.get('/:projectId/query/saved', userMd.isAuthenticated, asyncHandler(this.listSavedQueriesInfinite.bind(this)))
-        this.router.get('/:projectId/query/saved/:savedQueryId', userMd.isAuthenticated, asyncHandler(this.getSavedQuery.bind(this)))
-        this.router.patch('/:projectId/query/saved/:savedQueryId', userMd.isAuthenticated, asyncHandler(this.updateSavedQuery.bind(this)))
-        this.router.delete('/:projectId/query/saved/:savedQueryId', userMd.isAuthenticated, asyncHandler(this.deleteSavedQuery.bind(this)))
+        this.router.post('/:projectId/query/saved', userMd.isUserPermitted, asyncHandler(this.addSavedQuery.bind(this)))
+        this.router.get('/:projectId/query/saved', userMd.isUserPermitted, asyncHandler(this.listSavedQueriesInfinite.bind(this)))
+        this.router.get('/:projectId/query/saved/:savedQueryId', userMd.isUserPermitted, asyncHandler(this.getSavedQuery.bind(this)))
+        this.router.patch('/:projectId/query/saved/:savedQueryId', userMd.isUserPermitted, asyncHandler(this.updateSavedQuery.bind(this)))
+        this.router.delete('/:projectId/query/saved/:savedQueryId', userMd.isUserPermitted, asyncHandler(this.deleteSavedQuery.bind(this)))
         
-        this.router.get('/:projectId/query/tags', userMd.isAuthenticated, asyncHandler(this.listSavedQueriesTags.bind(this)))
-        this.router.delete('/:projectId/query/tags/:tagId', userMd.isAuthenticated, asyncHandler(this.deleteSavedQueriesTag.bind(this)))
+        this.router.get('/:projectId/query/tags', userMd.isUserPermitted, asyncHandler(this.listSavedQueriesTags.bind(this)))
+        this.router.delete('/:projectId/query/tags/:tagId', userMd.isUserPermitted, asyncHandler(this.deleteSavedQueriesTag.bind(this)))
     }
 }
 

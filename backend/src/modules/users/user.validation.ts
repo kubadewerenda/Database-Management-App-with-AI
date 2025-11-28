@@ -2,6 +2,11 @@ import { z } from 'zod'
 
 export const registerSchema = z
     .object({
+        username: z
+            .string()
+            .trim()
+            .min(1, 'Username is required')
+            .max(50, 'Username must be at most 50 characters'),
         email: z.string().trim().email(),
         password: z
             .string()
@@ -29,6 +34,12 @@ export const loginSchema = z.object({
 export const updateUserSchema = z
     .object({
         email: z.string().trim().email().optional(),
+        username: z
+            .string()
+            .trim()
+            .min(1, 'Username is required')
+            .max(50, 'Username must be at most 50 characters')
+            .optional(),
         currentPassword: z.string().min(1).optional(),
         newPassword: z
             .string()
@@ -42,12 +53,19 @@ export const updateUserSchema = z
             )
             .optional(),
     })
-    .refine(
-        (d) =>
-        !(d.currentPassword || d.newPassword) ||
+    .refine((d) => !(d.currentPassword || d.newPassword) ||
         (d.currentPassword && d.newPassword),
         {
-        message: 'Both passwords are required to change password',
-        path: ['currentPassword'],
+            message: 'Both passwords are required to change password',
+            path: ['currentPassword'],
         }
     )
+
+export const googleCallbackSchema = z.object({
+    code: z.string().min(1, 'Missing code parameter.'),
+    state: z.string().min(1, 'Missing state parameter.'),
+})
+
+export const verifyEmailSchema = z.object({
+    token: z.string().min(1, 'Verification token is required.'),
+})

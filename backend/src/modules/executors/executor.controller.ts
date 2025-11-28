@@ -122,11 +122,11 @@ class QueryController extends Controller {
     // TODO: DODATKOWO!!! dodac get dla danego terminala co zwraca uzyte zapytania z executions
 
     public routes(): void {
-        this.router.post('/:projectId/executors/:executorId/execute', userMd.isAuthenticated, asyncHandler(this.executeQuery.bind(this)))
-        this.router.post('/:projectId/executors', userMd.isAuthenticated, asyncHandler(this.createExecutor.bind(this)))
-        this.router.get('/:projectId/executors', userMd.isAuthenticated, asyncHandler(this.getExecutorsList.bind(this)))
-        this.router.patch('/:projectId/executors/:executorId', userMd.isAuthenticated, asyncHandler(this.updateExecutor.bind(this)))
-        this.router.delete('/:projectId/executors/:executorId', userMd.isAuthenticated, asyncHandler(this.deleteExecutor.bind(this)))
+        this.router.post('/:projectId/executors/:executorId/execute', userMd.isUserPermitted, asyncHandler(this.executeQuery.bind(this)))
+        this.router.post('/:projectId/executors', userMd.isUserPermitted, asyncHandler(this.createExecutor.bind(this)))
+        this.router.get('/:projectId/executors', userMd.isUserPermitted, asyncHandler(this.getExecutorsList.bind(this)))
+        this.router.patch('/:projectId/executors/:executorId', userMd.isUserPermitted, asyncHandler(this.updateExecutor.bind(this)))
+        this.router.delete('/:projectId/executors/:executorId', userMd.isUserPermitted, asyncHandler(this.deleteExecutor.bind(this)))
     }
 }
 
