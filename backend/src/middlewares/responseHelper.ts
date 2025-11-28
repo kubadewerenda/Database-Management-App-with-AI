@@ -27,6 +27,10 @@ export function sendUnauthorized(res: Response, err: any){
     return sendAndLog(res, 403, err);
 }
 
+export function sendAccessDenied(res: Response, err: any){
+    return sendAndLog(res, 403, err);
+}
+
 export function sendConflict(res: Response, err: any){
     return sendAndLog(res, 409, err);
 }

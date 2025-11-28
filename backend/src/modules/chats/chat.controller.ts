@@ -61,8 +61,8 @@ class ChatController extends Controller {
     }
     
     public routes(): void {
-        this.router.get('/:projectId/chat/history', userMd.isAuthenticated, asyncHandler(this.getChatHistory.bind(this)))
-        this.router.post('/:projectId/chat/message', userMd.isAuthenticated, asyncHandler(this.sendMessage.bind(this)))
+        this.router.get('/:projectId/chat/history', userMd.isUserPermitted, asyncHandler(this.getChatHistory.bind(this)))
+        this.router.post('/:projectId/chat/message', userMd.isUserPermitted, asyncHandler(this.sendMessage.bind(this)))
     }
 }
 
