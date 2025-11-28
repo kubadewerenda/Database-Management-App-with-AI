@@ -38,7 +38,10 @@ const ProjectList = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { refreshTrigger } = useOutletContext<{ refreshTrigger: number }>();
+  const { refreshTrigger, triggerProjectsRefresh } = useOutletContext<{
+    refreshTrigger: number;
+    triggerProjectsRefresh: () => void;
+  }>();
 
   useEffect(() => {
     const loadData = async () => {
@@ -280,6 +283,7 @@ const ProjectList = () => {
         <ProjectEditPopup
           modalProject={modalProject}
           setIsEditPopupOpen={setIsEditPopupOpen}
+          onProjectDeleted={triggerProjectsRefresh}
         />
       )}
     </div>

@@ -9,6 +9,8 @@ const Dashboard = () => {
   const [activeView, setActiveView] = useState("projects");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  const triggerProjectsRefresh = () => setRefreshTrigger((prev) => prev + 1);
+
   return (
     <main className="flex h-screen flex-col gap-4 p-4 overflow-hidden">
       <Navbar />
@@ -25,12 +27,17 @@ const Dashboard = () => {
           isSideBarOpen={isSideBarOpen}
           setIsSideBarOpen={setIsSideBarOpen}
           activeView={activeView}
-          onProjectCreated={() => setRefreshTrigger((prev) => prev + 1)}
+          onProjectCreated={triggerProjectsRefresh}
         />
 
         <div className="flex-1 overflow-hidden">
           <div className="flex h-full min-h-0 flex-col rounded-xl border border-neutral-200/20 bg-neutral-900 p-3">
-            <Outlet context={{ refreshTrigger }} />
+            <Outlet
+              context={{
+                refreshTrigger,
+                triggerProjectsRefresh,
+              }}
+            />
           </div>
         </div>
       </section>

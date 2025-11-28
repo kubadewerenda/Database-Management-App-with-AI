@@ -10,7 +10,6 @@ const ColorPanel = ({ setColor }: { setColor: (value: string) => void }) => {
     const actionId = button.dataset.id;
 
     if (actionId) {
-      console.log("Ustawiam kolor HEX:", actionId);
       setColor(actionId);
     }
   };
