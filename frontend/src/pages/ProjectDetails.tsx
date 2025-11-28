@@ -3,6 +3,7 @@ import ResizableDetails from "../components/project-details/ResizableDetails";
 import { useParams } from "react-router-dom";
 import { fetchProject } from "../api/projectDetailsApi";
 import { useEffect, useState } from "react";
+import { PuffLoader } from "react-spinners";
 
 const ProjectDetails = () => {
   type ProjectType = {
@@ -50,7 +51,9 @@ const ProjectDetails = () => {
 
   if (isLoading || !projectData) {
     return (
-      <div className="flex justify-center items-center">Ładowanie projektu</div>
+      <div className="flex w-full h-full justify-center items-center">
+        <PuffLoader color="#e6901d" speedMultiplier={1} size={60} />
+      </div>
     );
   }
 

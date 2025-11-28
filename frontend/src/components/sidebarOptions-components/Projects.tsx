@@ -11,7 +11,7 @@ const Projects = ({ onProjectCreated }: ProjectProps) => {
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
   const [error, setError] = useState(false);
-  const [color, setColor] = useState("");
+  const [color, setColor] = useState("#f97316");
 
   const [isColorPanelOpen, setIsColorPanelOpen] = useState(false);
 
@@ -44,6 +44,7 @@ const Projects = ({ onProjectCreated }: ProjectProps) => {
 
         setProjectName("");
         setProjectDescription("");
+        setColor("#f97316");
 
         onProjectCreated?.();
       } catch (error) {
@@ -87,7 +88,10 @@ const Projects = ({ onProjectCreated }: ProjectProps) => {
           onMouseEnter={() => setIsColorPanelOpen(true)}
           onMouseLeave={() => setIsColorPanelOpen(false)}
         >
-          <div className="p-2 rounded-xl border border-orange-400/40 hover:cursor-pointer hover:bg-neutral-600 hover:border-neutral-700 transition">
+          <div
+            className="p-2 rounded-xl border border-orange-400/40 hover:cursor-pointer hover:bg-neutral-600 hover:border-neutral-700 transition"
+            style={{ backgroundColor: color + "33" }}
+          >
             {isColorPanelOpen && <ColorPanel setColor={setColor} />}
             <IoColorPaletteOutline size={25} className="text-neutral-400" />
           </div>
