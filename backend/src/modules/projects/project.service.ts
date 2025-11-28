@@ -7,6 +7,8 @@ import { DbSchemaSnapshot } from '../../types/schemaCache/schemaCache.js'
 
 import DbConnectionService from '../dbconnections/dbConnection.service.js'
 import ChatService from '../chats/chat.service.js'
+import Executor from '../../models/executors/executor.model.js'
+import ExecutorService from '../executors/executor.service.js'
 
 type ProjectCreateData = {
     name: string,
@@ -28,6 +30,7 @@ type ProjectOverview = {
         latencyMs: number | null
     }
     schema: DbSchemaSnapshot,
+    executors: Executor[] | null
     chat: {
         id: number
     }
@@ -51,10 +54,12 @@ type ProjectListResult = {
 export default class ProjectService {
     private dbConnectionService: DbConnectionService
     private chatService: ChatService
+    private executorService: ExecutorService
     
     constructor() {
         this.dbConnectionService = new DbConnectionService()
         this.chatService = new ChatService()
+        this.executorService = new ExecutorService()
     }
     private async _findOwned(projectId: number, userId: number) {
         return await helpFunctions._ensureProjectOwned(projectId, userId)
@@ -85,6 +90,11 @@ export default class ProjectService {
             )
         } catch {}
 
+        const executors = await this.executorService.listExecutors(
+            project.id,
+            userId
+        )
+
         const chat = await this.chatService.getOrCreateChatForProject(
             project.id,
             userId
@@ -100,6 +110,7 @@ export default class ProjectService {
                 latencyMs: dbConnection?.latencyMs ?? null
             },
             schema: schema ?? { tables: [] },
+            executors: executors ?? [],
             chat : {
                 id: chat.id
             }

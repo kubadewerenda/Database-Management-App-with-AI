@@ -5,7 +5,7 @@ import SavedQueryService from './savedQuery.service.js'
 import * as userMd from '../../middlewares/users/user.middleware.js'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware.js'
 import { projectIdSchema } from '../projects/project.validation.js'
-import { savedQueryIdSchema, savedQueryListInfiniteSchema, savedQuerySchema, savedQueryUpdateSchema } from './savedQuery.validation.js'
+import { savedQueryIdSchema, savedQueryListInfiniteSchema, savedQuerySchema, savedQueryTagIdSchema, savedQueryUpdateSchema } from './savedQuery.validation.js'
 
 
 class SavedQueryController extends Controller {
@@ -114,15 +114,31 @@ class SavedQueryController extends Controller {
         return res.status(200).json(result)
     }
 
-    private async listProjectTags(req: Request, res: Response) {
+    private async listSavedQueriesTags(req: Request, res: Response) {
         const projectId = projectIdSchema.safeParse(req.params.projectId)
         if(!projectId.success) throw projectId.error
 
         const userId = req.user!.id
 
-        const tags = await this.savedQueryService.listProjectTags(projectId.data, userId)
+        const tags = await this.savedQueryService.listSavedQueriesTags(projectId.data, userId)
 
         return res.status(200).json({ ...tags })
+    }
+
+    private async deleteSavedQueriesTag(req: Request, res: Response) {
+        const projectId = projectIdSchema.safeParse(req.params.projectId)
+        if (!projectId.success) throw projectId.error
+
+        const tagId = savedQueryTagIdSchema.safeParse(req.params.tagId)
+        if (!tagId.success) throw tagId.error
+
+        const userId = req.user!.id
+
+        await this.savedQueryService.deleteSavedQueriesTag(projectId.data, userId, tagId.data)
+
+        return res.status(200).json({
+            message: "Tag deleted successfully!"
+        })
     }
     
     public routes(): void {
@@ -132,7 +148,8 @@ class SavedQueryController extends Controller {
         this.router.patch('/:projectId/query/saved/:savedQueryId', userMd.isAuthenticated, asyncHandler(this.updateSavedQuery.bind(this)))
         this.router.delete('/:projectId/query/saved/:savedQueryId', userMd.isAuthenticated, asyncHandler(this.deleteSavedQuery.bind(this)))
         
-        this.router.get('/:projectId/query/tags', userMd.isAuthenticated, asyncHandler(this.listProjectTags.bind(this)))
+        this.router.get('/:projectId/query/tags', userMd.isAuthenticated, asyncHandler(this.listSavedQueriesTags.bind(this)))
+        this.router.delete('/:projectId/query/tags/:tagId', userMd.isAuthenticated, asyncHandler(this.deleteSavedQueriesTag.bind(this)))
     }
 }
 

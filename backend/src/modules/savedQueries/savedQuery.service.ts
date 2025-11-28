@@ -182,12 +182,39 @@ export default class SavedQueryService {
         }
     }
 
-    public async listProjectTags(projectId: number, userId: number) {
+    public async listSavedQueriesTags(projectId: number, userId: number) {
         await this._ensureProjectOwned(projectId, userId)
 
         return await Tag.findAll({
             where: { projectId },
             order: [['name', 'ASC']]
         })
+    }
+
+    public async deleteSavedQueriesTag(projectId: number, userId: number, tagId: number) {
+        await this._ensureProjectOwned(projectId, userId)
+
+        const tag = await Tag.findOne({
+            where: { id: tagId, projectId }
+        })
+
+        if(!tag) {
+            throw new NotFoundException("Tag not found.")
+        }
+
+        const usedCount = await SavedQuery.count({
+            include: [{
+                model: Tag,
+                where: { id: tagId }
+            }]
+        })
+
+        if (usedCount > 0) {
+            throw new BadRequestException("Cannot delete tag because it is used in saved queries.")
+        }
+
+        await (tag as any).$set("savedQueries", [])
+
+        await tag.destroy()
     }
 }

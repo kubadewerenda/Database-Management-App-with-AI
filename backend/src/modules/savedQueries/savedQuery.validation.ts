@@ -5,6 +5,11 @@ export const savedQueryIdSchema = z
     .regex(/^\d+$/, 'Project id must be a positive integer')
     .transform((v) => Number(v))
 
+export const savedQueryTagIdSchema = z
+    .string()
+    .regex(/^\d+$/, 'Project id must be a positive integer')
+    .transform((v) => Number(v))
+
 export const savedQuerySchema = z.object({
     name: z.string().min(1).max(255),
     description: z.string().max(2000).optional().nullable(),

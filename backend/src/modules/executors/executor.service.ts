@@ -62,7 +62,7 @@ export default class ExecutorService {
         for(const executor of executors) {
             if(executor.isPinned) {
                 executor.isPinned = false
-                executor.save()
+                await executor.save()
             }
         }
     }
@@ -85,7 +85,7 @@ export default class ExecutorService {
                 throw new BadRequestException('Executor not found.')
             }
             existing.isPinned = true
-            existing.save()
+            await existing.save()
             return existing
         }
 
