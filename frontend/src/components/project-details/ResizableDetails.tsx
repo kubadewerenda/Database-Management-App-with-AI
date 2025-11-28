@@ -4,11 +4,9 @@ import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import { FaKey, FaTable } from "react-icons/fa";
 import Chat from "./Chat";
 import { BsSearch } from "react-icons/bs";
-// import { HiMiniEye } from "react-icons/hi2";
-// import { HiEyeSlash } from "react-icons/hi2";
-
 import { HiOutlineEye } from "react-icons/hi2";
 import { HiOutlineEyeSlash } from "react-icons/hi2";
+import { PuffLoader } from "react-spinners";
 
 type DbSchema = {
   name: string;
@@ -36,15 +34,20 @@ const ResizableDetails = ({
 
   const [showTablesDetails, setShowTablesDetails] = useState(true);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     const handleFetchingData = async () => {
       if (!id) return;
       try {
+        setIsLoading(true);
         const response = await projectOverview(id);
         setDatabase(response.projectOverview.schema.tables);
         console.log(response.projectOverview.schema.tables);
       } catch (e) {
         console.error("Błąd pobierania schematu", e);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -95,62 +98,68 @@ const ResizableDetails = ({
           </div>
         </section>
         <div className="h-full overflow-y-auto pr-2 bg-neutral-950/50 rounded-2xl border border-neutral-600/50 ">
-          <div className="flex flex-wrap gap-4 items-start content-start p-3">
-            {database.map((table, index) => (
-              <div
-                key={index}
-                className="flex flex-col w-64 bg-neutral-900 border border-neutral-700 rounded-lg shadow-sm hover:shadow-md hover:border-neutral-600 transition-all duration-200 overflow-hidden"
-              >
-                <div className="flex items-center gap-2 px-3 py-2 bg-neutral-950/70 border-b border-neutral-700">
-                  <FaTable style={{ color: color }} />
-                  <h3
-                    className="font-semibold text-sm text-neutral-300 truncate"
-                    title={table.name}
-                  >
-                    {table.name}
-                  </h3>
-                </div>
-                {showTablesDetails && (
-                  <div className="flex flex-col py-1">
-                    {table.columns.map((col, colIndex) => (
-                      <div
-                        key={colIndex}
-                        className={`group flex items-center justify-between px-3 py-1.5 text-xs border-b border-transparent hover:bg-neutral-800/80 ${
-                          colIndex % 2 === 0
-                            ? "bg-neutral-800/70"
-                            : "bg-neutral-900/30"
-                        }`}
-                      >
-                        <div className="flex items-center gap-1 overflow-hidden">
-                          {col.isForeignKey && (
-                            <FaKey className="text-amber-300" size={10} />
-                          )}
+          {isLoading ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <PuffLoader color={color} size={60} />
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-4 items-start content-start p-3">
+              {database.map((table, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col w-64 bg-neutral-900 border border-neutral-700 rounded-lg shadow-sm hover:shadow-md hover:border-neutral-600 transition-all duration-200 overflow-hidden"
+                >
+                  <div className="flex items-center gap-2 px-3 py-2 bg-neutral-950/70 border-b border-neutral-700">
+                    <FaTable style={{ color: color }} />
+                    <h3
+                      className="font-semibold text-sm text-neutral-300 truncate"
+                      title={table.name}
+                    >
+                      {table.name}
+                    </h3>
+                  </div>
+                  {showTablesDetails && (
+                    <div className="flex flex-col py-1">
+                      {table.columns.map((col, colIndex) => (
+                        <div
+                          key={colIndex}
+                          className={`group flex items-center justify-between px-3 py-1.5 text-xs border-b border-transparent hover:bg-neutral-800/80 ${
+                            colIndex % 2 === 0
+                              ? "bg-neutral-800/70"
+                              : "bg-neutral-900/30"
+                          }`}
+                        >
+                          <div className="flex items-center gap-1 overflow-hidden">
+                            {col.isForeignKey && (
+                              <FaKey className="text-amber-300" size={10} />
+                            )}
 
-                          <span
-                            className={`truncate font-semibold ${
-                              col.isForeignKey
-                                ? "text-yellow-100"
-                                : "text-neutral-400"
-                            }`}
-                          >
-                            {col.name}
+                            <span
+                              className={`truncate font-semibold ${
+                                col.isForeignKey
+                                  ? "text-yellow-100"
+                                  : "text-neutral-400"
+                              }`}
+                            >
+                              {col.name}
+                            </span>
+                          </div>
+
+                          <span className="font-mono text-neutral-500 ml-2 whitespace-nowrap text-md">
+                            {col.dataType}
                           </span>
                         </div>
+                      ))}
+                    </div>
+                  )}
 
-                        <span className="font-mono text-neutral-500 ml-2 whitespace-nowrap text-md">
-                          {col.dataType}
-                        </span>
-                      </div>
-                    ))}
+                  <div className="px-3 py-1 bg-neutral-800 border-t border-neutral-800 text-[10px] text-neutral-500 text-right">
+                    {table.columns.length} columns
                   </div>
-                )}
-
-                <div className="px-3 py-1 bg-neutral-800 border-t border-neutral-800 text-[10px] text-neutral-500 text-right">
-                  {table.columns.length} columns
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </Panel>
 

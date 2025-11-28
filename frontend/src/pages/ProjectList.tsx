@@ -7,6 +7,7 @@ import { TbListLetters } from "react-icons/tb";
 import { CiCalendarDate } from "react-icons/ci";
 import { BsCalendar2DateFill } from "react-icons/bs";
 import { IoMdClose } from "react-icons/io";
+import { PuffLoader } from "react-spinners";
 
 import { fetchProjects } from "../api/projectsApi";
 
@@ -34,16 +35,26 @@ const ProjectList = () => {
 
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const navigate = useNavigate();
   const { refreshTrigger } = useOutletContext<{ refreshTrigger: number }>();
 
   useEffect(() => {
-    const loadProjects = async () => {
-      const data = await fetchProjects();
-      setAllProjects(data.projects);
+    const loadData = async () => {
+      setIsLoading(true);
+
+      try {
+        const data = await fetchProjects();
+        setAllProjects(data.projects);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    loadProjects();
-  }, [refreshTrigger, isEditPopupOpen]);
+    loadData();
+  }, [refreshTrigger]);
 
   const handleOpenProject = (project: ProjectType) => {
     navigate(`/dashboard/projects/${project.id}`, {
@@ -87,11 +98,9 @@ const ProjectList = () => {
             Kliknij projekt, aby otworzyć jego workspace z połączeniem do bazy,
             zapytaniami i historią.
           </p>
-          {/* <div className="h-px w-full bg-neutral-600"></div> */}
           <div className="pointer-events-none absolute left-0 top-full h-[50vh] w-full -z-10 bg-linear-to-b from-orange-400/70 via-orange-900/20 to-transparent blur-xl"></div>
         </div>
         <div className="flex gap-4 items-center">
-          {/* <h3 className="font-semibold text-neutral-300">Wyszukiwanie</h3> */}
           <div className="flex items-center gap-2">
             <BsSearch className="text-neutral-400" size={20} />
             <input
@@ -177,7 +186,11 @@ const ProjectList = () => {
         </div>
       </div>
 
-      {sortedProjects.length > 0 ? (
+      {isLoading ? (
+        <div className="flex flex-1 items-center justify-center">
+          <PuffLoader color="#e6901d" speedMultiplier={1} size={50} />
+        </div>
+      ) : sortedProjects.length > 0 ? (
         <div className="grid flex-1 min-h-0 grid-cols-1 content-start items-start gap-6 overflow-y-auto xl:grid-cols-2">
           {sortedProjects.map((element) => {
             const initial = element.name.charAt(0).toUpperCase();
