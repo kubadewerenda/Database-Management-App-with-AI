@@ -117,7 +117,6 @@ export default class UserService {
         }
 
         await user.save()
-        return user.toSafeJSON()
     }
 
     public async register({ 
@@ -158,7 +157,7 @@ export default class UserService {
 
         const accessToken = this._signAccessToken(user.id)
 
-        return { user: user.toSafeJSON(), accessToken }
+        return accessToken
     }
 
     public async login({
@@ -189,7 +188,7 @@ export default class UserService {
         
         const accessToken = this._signAccessToken(user.id)
 
-        return { user: user.toSafeJSON(), accessToken }
+        return accessToken
     }
 
     public async updateUser(
@@ -218,7 +217,7 @@ export default class UserService {
 
         if (currentPassword || newPassword) {
             if (!currentPassword || !newPassword) {
-                throw new BadRequestException('Both currentPassword and newPassword are required.')
+                throw new BadRequestException('Both current password and new password are required.')
             }
             if (!user.passwordHash) {
                 throw new BadRequestException('Password cannot be changed for this account.')
@@ -337,6 +336,6 @@ export default class UserService {
         }
 
         const accessToken = this._signAccessToken(user.id)
-        return { user: user.toSafeJSON(), accessToken }
+        return accessToken
     }
 }
