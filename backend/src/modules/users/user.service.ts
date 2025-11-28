@@ -153,8 +153,7 @@ export default class UserService {
         try {
             await this.sendVerificationEmail(user)
         } catch (err) {
-            console.error('Failed to send verification email:', err)
-            // nie przerywamy rejestracji – zależy od wymagań, na razie tylko log
+            throw new BadRequestException('Verification failed. Try again later.')
         }
 
         const accessToken = this._signAccessToken(user.id)
