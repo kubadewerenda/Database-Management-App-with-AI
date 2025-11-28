@@ -14,18 +14,25 @@ type ProjectType = {
 type ProjectEditPopupProps = {
   modalProject: ProjectType;
   setIsEditPopupOpen: (isOpen: boolean) => void;
+  onProjectDeleted?: () => void;
 };
 
 const ProjectEditPopup = ({
   modalProject,
   setIsEditPopupOpen,
+  onProjectDeleted,
 }: ProjectEditPopupProps) => {
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
 
   const handleDelete = async () => {
-    await deleteProject(modalProject.id);
-    setIsEditPopupOpen(false);
+    try {
+      await deleteProject(modalProject.id);
+      onProjectDeleted?.();
+      setIsEditPopupOpen(false);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleUpdateProjectData = async () => {
