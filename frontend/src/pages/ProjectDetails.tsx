@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import DbConnection from "../components/project-details/DbConnection";
 import ResizableDetails from "../components/project-details/ResizableDetails";
 import { useParams } from "react-router-dom";
@@ -9,6 +8,7 @@ const ProjectDetails = () => {
   type ProjectType = {
     id: number;
     name: string;
+    color: string;
     description: string | null;
     ownerId: number;
     createdAt: string;
@@ -21,8 +21,6 @@ const ProjectDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const [isConnected, setIsConnected] = useState(false);
-
-  const navigate = useNavigate();
 
   const { projectId } = useParams();
   const id = Number(projectId);
@@ -58,23 +56,15 @@ const ProjectDetails = () => {
 
   return (
     <section className="flex h-full flex-col text-neutral-200">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold pl-4 text-neutral-200">
-            {projectData.name}
-          </h1>
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="rounded-2xl border border-neutral-600 px-4 py-2 text-sm font-semibold text-neutral-200 transition hover:border-orange-500 hover:text-orange-400"
-        >
-          Wróć do listy
-        </button>
-      </header>
-      <div className="h-full overflow-y-auto">
+      <div className="h-full overflow-y-auto w-full">
         {!isConnected && <DbConnection setIsConnected={setIsConnected} />}
-        {isConnected && <ResizableDetails id={id} />}
+        {isConnected && (
+          <ResizableDetails
+            id={id}
+            color={projectData.color}
+            name={projectData.name}
+          />
+        )}
       </div>
     </section>
   );

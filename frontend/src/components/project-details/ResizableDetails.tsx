@@ -2,6 +2,13 @@ import { projectOverview } from "../../api/projectDetailsApi";
 import { useEffect, useState } from "react";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import { FaKey, FaTable } from "react-icons/fa";
+import Chat from "./Chat";
+import { BsSearch } from "react-icons/bs";
+// import { HiMiniEye } from "react-icons/hi2";
+// import { HiEyeSlash } from "react-icons/hi2";
+
+import { HiOutlineEye } from "react-icons/hi2";
+import { HiOutlineEyeSlash } from "react-icons/hi2";
 
 type DbSchema = {
   name: string;
@@ -16,8 +23,18 @@ type DbSchema = {
   commend: string;
 };
 
-const ResizableDetails = ({ id }: { id: number }) => {
+const ResizableDetails = ({
+  id,
+  color,
+  name,
+}: {
+  id: number;
+  color: string;
+  name: string;
+}) => {
   const [database, setDatabase] = useState<DbSchema[]>([]);
+
+  const [showTablesDetails, setShowTablesDetails] = useState(true);
 
   useEffect(() => {
     const handleFetchingData = async () => {
@@ -25,6 +42,7 @@ const ResizableDetails = ({ id }: { id: number }) => {
       try {
         const response = await projectOverview(id);
         setDatabase(response.projectOverview.schema.tables);
+        console.log(response.projectOverview.schema.tables);
       } catch (e) {
         console.error("Błąd pobierania schematu", e);
       }
@@ -34,21 +52,57 @@ const ResizableDetails = ({ id }: { id: number }) => {
   }, [id]);
 
   return (
-    <PanelGroup direction="horizontal" className="h-full gap-2">
+    <PanelGroup direction="horizontal" className="h-full">
       <Panel
         defaultSize={50}
         minSize={30}
-        className="bg-neutral-950/50 h-full p-4 rounded-2xl border border-neutral-600/50"
+        className=" h-full  flex flex-col gap-2"
       >
-        <div className="h-full overflow-y-auto pr-2">
-          <div className="flex flex-wrap gap-4 items-start content-start">
+        {/* DIV NA TOOLTIP */}
+        <section className="flex items-center justify-between px-6  ">
+          <div className="flex items-end gap-4">
+            <h1 className="text-xl font-semibold text-neutral-300">{name}</h1>
+            <p className="text-neutral-400 text-xs ">
+              <span>{database.length}</span> tables
+            </p>
+          </div>
+
+          <div className="flex gap-6 items-center">
+            <div className="flex items-center gap-2">
+              <BsSearch className="text-neutral-500" />
+              <input
+                type="text"
+                placeholder="Tabela ..."
+                className="outline-none border h-[25px] border-neutral-500/40 bg-neutral-800/80 rounded-2xl px-3 py-1 focus:neutral-orange-400/60 focus:ring-2 focus:ring-neutral-400/40 transition text-neutral-300 w-[180px] text-sm"
+              />
+            </div>
+
+            {showTablesDetails ? (
+              <button onClick={() => setShowTablesDetails((prev) => !prev)}>
+                <HiOutlineEyeSlash
+                  size={20}
+                  className="text-neutral-400 hover:cursor-pointer"
+                />
+              </button>
+            ) : (
+              <button onClick={() => setShowTablesDetails((prev) => !prev)}>
+                <HiOutlineEye
+                  size={20}
+                  className="text-neutral-400 hover:cursor-pointer"
+                />
+              </button>
+            )}
+          </div>
+        </section>
+        <div className="h-full overflow-y-auto pr-2 bg-neutral-950/50 rounded-2xl border border-neutral-600/50 ">
+          <div className="flex flex-wrap gap-4 items-start content-start p-3">
             {database.map((table, index) => (
               <div
                 key={index}
-                className="flex flex-col w-64 bg-neutral-900 border border-neutral-800 rounded-lg shadow-sm hover:shadow-md hover:border-neutral-600 transition-all duration-200 overflow-hidden"
+                className="flex flex-col w-64 bg-neutral-900 border border-neutral-700 rounded-lg shadow-sm hover:shadow-md hover:border-neutral-600 transition-all duration-200 overflow-hidden"
               >
-                <div className="flex items-center gap-2 px-3 py-2 bg-neutral-800/50 border-b border-neutral-700">
-                  <FaTable className="text-orange-400/80" />
+                <div className="flex items-center gap-2 px-3 py-2 bg-neutral-950/70 border-b border-neutral-700">
+                  <FaTable style={{ color: color }} />
                   <h3
                     className="font-semibold text-sm text-neutral-300 truncate"
                     title={table.name}
@@ -56,39 +110,42 @@ const ResizableDetails = ({ id }: { id: number }) => {
                     {table.name}
                   </h3>
                 </div>
-                <div className="flex flex-col py-1">
-                  {table.columns.map((col, colIndex) => (
-                    <div
-                      key={colIndex}
-                      className={`group flex items-center justify-between px-3 py-1.5 text-xs border-b border-transparent hover:bg-neutral-800/80 ${
-                        colIndex % 2 === 0
-                          ? "bg-neutral-800/70"
-                          : "bg-neutral-900/30"
-                      }`}
-                    >
-                      <div className="flex items-center gap-1 overflow-hidden">
-                        {col.isForeignKey && (
-                          <FaKey className="text-amber-300" size={10} />
-                        )}
+                {showTablesDetails && (
+                  <div className="flex flex-col py-1">
+                    {table.columns.map((col, colIndex) => (
+                      <div
+                        key={colIndex}
+                        className={`group flex items-center justify-between px-3 py-1.5 text-xs border-b border-transparent hover:bg-neutral-800/80 ${
+                          colIndex % 2 === 0
+                            ? "bg-neutral-800/70"
+                            : "bg-neutral-900/30"
+                        }`}
+                      >
+                        <div className="flex items-center gap-1 overflow-hidden">
+                          {col.isForeignKey && (
+                            <FaKey className="text-amber-300" size={10} />
+                          )}
 
-                        <span
-                          className={`truncate ${
-                            col.isForeignKey
-                              ? "text-yellow-100"
-                              : "text-neutral-400"
-                          }`}
-                        >
-                          {col.name}
+                          <span
+                            className={`truncate font-semibold ${
+                              col.isForeignKey
+                                ? "text-yellow-100"
+                                : "text-neutral-400"
+                            }`}
+                          >
+                            {col.name}
+                          </span>
+                        </div>
+
+                        <span className="font-mono text-neutral-500 ml-2 whitespace-nowrap text-md">
+                          {col.dataType}
                         </span>
                       </div>
+                    ))}
+                  </div>
+                )}
 
-                      <span className="font-mono text-neutral-500 ml-2 whitespace-nowrap text-[10px]">
-                        {col.dataType}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="px-3 py-1 bg-neutral-900 border-t border-neutral-800 text-[10px] text-neutral-500 text-right">
+                <div className="px-3 py-1 bg-neutral-800 border-t border-neutral-800 text-[10px] text-neutral-500 text-right">
                   {table.columns.length} columns
                 </div>
               </div>
@@ -97,13 +154,15 @@ const ResizableDetails = ({ id }: { id: number }) => {
         </div>
       </Panel>
 
-      <PanelResizeHandle className="w-1 bg-neutral-700 hover:bg-orange-500/50 transition-colors rounded-full mx-1" />
+      <PanelResizeHandle className="w-1 bg-transparent hover:bg-neutral-500/50 rounded-full mx-1 hover:w-1.5 transition-all" />
 
       <Panel
         defaultSize={50}
         minSize={30}
-        className="bg-neutral-950 h-full flex flex-col rounded-2xl border border-neutral-800 overflow-hidden"
-      ></Panel>
+        className=" h-full flex flex-col relative"
+      >
+        <Chat id={id} />
+      </Panel>
     </PanelGroup>
   );
 };
