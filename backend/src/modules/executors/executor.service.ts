@@ -10,7 +10,6 @@ import Executor from '../../models/executors/executor.model.js'
 type QueryData = {
     sql: string
     explain?: boolean
-    executorName?: string
 }
 
 const MAX_RETURNED_ROWS = 500
@@ -141,11 +140,30 @@ export default class ExecutorService {
         return executor
     }
 
+    public async deleteExecutor(
+        projectId: number,
+        userId: number,
+        executorId: number
+    ) {
+        await this._ensureProjectOwned(projectId, userId)
+
+        const executor = await Executor.findOne({
+            where: { id: executorId, projectId }
+        })
+
+        if (!executor) {
+            throw new BadRequestException('Executor not found.')
+        }
+
+
+        await executor.destroy()
+    }
+
     public async executeQuery(
         projectId: number,
         userId: number,
         executorId: number,
-        { sql, explain, executorName }: QueryData,
+        { sql, explain }: QueryData,
     ) {
         await this._ensureProjectOwned(projectId, userId)
 

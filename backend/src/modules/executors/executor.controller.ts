@@ -19,7 +19,7 @@ class QueryController extends Controller {
         this. executorService = new  ExecutorService()
     }
 
-    private async execute_query(req: Request, res: Response) {
+    private async executeQuery(req: Request, res: Response) {
         const projectId = projectIdSchema.safeParse(req.params.projectId)
         if (!projectId.success) throw projectId.error
 
@@ -58,7 +58,7 @@ class QueryController extends Controller {
         })
     }
 
-    private async list_executors(req: Request, res: Response) {
+    private async getExecutorsList(req: Request, res: Response) {
         const projectId = projectIdSchema.safeParse(req.params.projectId)
         if (!projectId.success) throw projectId.error
 
@@ -74,7 +74,7 @@ class QueryController extends Controller {
         })
     }
 
-    private async update_executor(req: Request, res: Response) {
+    private async updateExecutor(req: Request, res: Response) {
         const projectId = projectIdSchema.safeParse(req.params.projectId)
         if (!projectId.success) throw projectId.error
 
@@ -99,11 +99,34 @@ class QueryController extends Controller {
         })
     }
 
+    private async deleteExecutor(req: Request, res: Response) {
+        const projectId = projectIdSchema.safeParse(req.params.projectId)
+        if (!projectId.success) throw projectId.error
+
+        const executorId = executorIdSchema.safeParse(req.params.executorId)
+        if (!executorId.success) throw executorId.error
+
+        const userId = req.user!.id
+
+        await this. executorService.deleteExecutor(
+            projectId.data,
+            userId,
+            executorId.data
+        )
+
+        return res.status(200).json({
+            message: 'Executor deleted successfully.',
+        })
+    }
+
+    // TODO: DODATKOWO!!! dodac get dla danego terminala co zwraca uzyte zapytania z executions
+
     public routes(): void {
-        this.router.post('/:projectId/executors/:executorId/execute', userMd.isAuthenticated, asyncHandler(this.execute_query.bind(this)))
+        this.router.post('/:projectId/executors/:executorId/execute', userMd.isAuthenticated, asyncHandler(this.executeQuery.bind(this)))
         this.router.post('/:projectId/executors', userMd.isAuthenticated, asyncHandler(this.createExecutor.bind(this)))
-        this.router.get('/:projectId/executors', userMd.isAuthenticated, asyncHandler(this.list_executors.bind(this)))
-        this.router.patch('/:projectId/executors/:executorId', userMd.isAuthenticated, asyncHandler(this.update_executor.bind(this)))
+        this.router.get('/:projectId/executors', userMd.isAuthenticated, asyncHandler(this.getExecutorsList.bind(this)))
+        this.router.patch('/:projectId/executors/:executorId', userMd.isAuthenticated, asyncHandler(this.updateExecutor.bind(this)))
+        this.router.delete('/:projectId/executors/:executorId', userMd.isAuthenticated, asyncHandler(this.deleteExecutor.bind(this)))
     }
 }
 
