@@ -135,40 +135,36 @@ export default class DbConnectionService {
                     ) AS table_comment
                 FROM information_schema.tables t
                 WHERE t.table_type = 'BASE TABLE'
-                    AND t.table_schema NOT IN ('pg_catalog', 'information_schema')
-                ORDER BY t.table_schema, t.table_name;
+                    AND t.table_schema = 'public'
+                ORDER BY t.table_name;
             `)
 
             const columnsResp = await client.query(`
                 SELECT
-                    c.table_schema,
-                    c.table_name,
-                    c.column_name,
-                    c.data_type,
-                    c.is_nullable = 'YES' AS is_nullable,
-                    c.column_default,
-                    tc.constraint_type,
-                    fk_tab.table_name AS fk_table_name,
-                    fk_col.column_name AS fk_column_name
-                FROM information_schema.columns c
-                LEFT JOIN information_schema.key_column_usage kcu
-                    ON kcu.table_schema = c.table_schema
-                    AND kcu.table_name = c.table_name
-                    AND kcu.column_name = c.column_name
-                LEFT JOIN information_schema.table_constraints tc
-                    ON tc.constraint_name = kcu.constraint_name
-                    AND tc.table_schema = kcu.table_schema
-                    AND tc.table_name = kcu.table_name
-                LEFT JOIN information_schema.referential_constraints rc
-                    ON rc.constraint_name = kcu.constraint_name
-                LEFT JOIN information_schema.key_column_usage fk_col
-                    ON fk_col.constraint_name = rc.unique_constraint_name
-                    AND fk_col.ordinal_position = kcu.position_in_unique_constraint
-                LEFT JOIN information_schema.tables fk_tab
-                    ON fk_tab.table_schema = fk_col.table_schema
-                    AND fk_tab.table_name = fk_col.table_name
-                WHERE c.table_schema NOT IN ('pg_catalog', 'information_schema')
-                ORDER BY c.table_schema, c.table_name, c.ordinal_position;
+                    n.nspname AS table_schema,
+                    c.relname AS table_name,
+                    a.attname AS column_name,
+                    pg_catalog.format_type(a.atttypid, a.atttypmod) AS data_type,
+                    NOT a.attnotnull AS is_nullable,
+                    pg_get_expr(ad.adbin, ad.adrelid) AS column_default,
+                    ct.contype AS constraint_type,
+                    ft.relname AS fk_table_name,
+                    fa.attname AS fk_column_name
+                FROM pg_attribute a
+                JOIN pg_class c       ON c.oid = a.attrelid
+                JOIN pg_namespace n   ON n.oid = c.relnamespace
+                LEFT JOIN pg_attrdef ad
+                    ON ad.adrelid = a.attrelid AND ad.adnum = a.attnum
+                LEFT JOIN pg_constraint ct
+                    ON ct.conrelid = a.attrelid AND a.attnum = ANY(ct.conkey)
+                LEFT JOIN pg_class ft
+                    ON ft.oid = ct.confrelid
+                LEFT JOIN pg_attribute fa
+                    ON fa.attrelid = ct.confrelid AND fa.attnum = ANY(ct.confkey)
+                WHERE n.nspname = 'public'
+                AND c.relkind = 'r'
+                AND a.attnum > 0
+                ORDER BY c.relname, a.attnum;
             `)
 
             const tableMap = new Map<string, DbTableSchema>()
@@ -193,12 +189,12 @@ export default class DbConnectionService {
                     name: row.column_name,
                     dataType: row.data_type,
                     isNullable: !!row.is_nullable,
-                    isPrimaryKey: row.constraint_type === 'PRIMARY KEY',
-                    isForeignKey: row.constraint_type === 'FOREIGN KEY',
+                    isPrimaryKey: row.constraint_type === 'p',
+                    isForeignKey: row.constraint_type === 'f',
                     defaultValue: row.column_default ?? null,
                 }
 
-                if(row.constraint_type === 'FOREIGN KEY' && row.fk_table_name && row.fk_column_name) {
+                if(row.constraint_type === 'f' && row.fk_table_name && row.fk_column_name) {
                     col.references = {
                         table: row.fk_table_name,
                         column: row.fk_column_name,
