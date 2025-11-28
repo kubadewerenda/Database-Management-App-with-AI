@@ -29,20 +29,24 @@ class UserController extends Controller {
         const data = registerSchema.safeParse(req.body)
         if(!data.success) throw data.error
 
-        const { user, accessToken } = await this.userService.register(data.data)
+        const accessToken = await this.userService.register(data.data)
         await this._loginUser(res, accessToken)
 
-        return res.status(201).json({ user, accessToken })
+        return res.status(201).json({
+            message: 'User registered successfully.'
+        })
     }
 
     private async login(req: Request, res: Response) {
         const data = loginSchema.safeParse(req.body)
         if(!data.success) throw data.error
 
-        const { user, accessToken } = await this.userService.login(data.data)
+        const accessToken = await this.userService.login(data.data)
         await this._loginUser(res, accessToken)
 
-        return res.status(201).json({ user, accessToken })
+        return res.status(201).json({ 
+            message: 'User logged successfully.'
+        })
     }
 
     private async loginGoogleRedirect(req: Request, res: Response) {
@@ -79,7 +83,7 @@ class UserController extends Controller {
             expires: new Date(0),
         })
 
-        const { user, accessToken } = await this.userService.loginWithGoogle(code)
+        const accessToken = await this.userService.loginWithGoogle(code)
 
         await this._loginUser(res, accessToken)
 
@@ -92,11 +96,10 @@ class UserController extends Controller {
         const parsed = verifyEmailSchema.safeParse(req.query)
         if (!parsed.success) throw parsed.error
 
-        const user = await this.userService.verifyEmail(parsed.data.token)
+        await this.userService.verifyEmail(parsed.data.token)
 
         return res.status(200).json({
-            message: 'Email verified successfully.',
-            user,
+            message: 'Email verified successfully.'
         })
     }
 
@@ -109,11 +112,15 @@ class UserController extends Controller {
             expires: new Date(0),
         })
 
-        return res.status(200).json({ message: 'Signed out.' })
+        return res.status(200).json({ 
+            message: 'Signed out.' 
+        })
     }
 
     private async getUser(req: Request, res: Response) {
-        return res.json({ user: req.user || null })
+        return res.status(200).json({ 
+            user: req.user || null 
+        })
     }
 
     private async updateUser(req: Request, res: Response) {
@@ -122,7 +129,10 @@ class UserController extends Controller {
 
         const updatedUser = await this.userService.updateUser(req.user?.id, data.data)
 
-        return res.status(200).json({ user: updatedUser })
+        return res.status(200).json({ 
+            message: 'User updated successfully.',
+            user: updatedUser 
+        })
     }
 
     public routes(): void {
