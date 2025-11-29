@@ -1,17 +1,21 @@
 import { Request, Response } from 'express'
 import Controller from '../../controllers/main.controller.js'
+
 import ExecutorService from './executor.service.js'
 
 import * as userMd from '../../middlewares/users/user.middleware.js'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware.js'
+
 import { projectIdSchema } from '../projects/project.validation.js'
 import {
     querySchema,
     executorIdSchema,
     executorUpdateSchema,
+    executionIdSchema,
+    exportFormatTypeSchema,
 } from './executor.validate.js'
 
-class QueryController extends Controller {
+class ExecutorController extends Controller {
     private executorService: ExecutorService
 
     constructor() {
@@ -119,6 +123,38 @@ class QueryController extends Controller {
         })
     }
 
+    private async exportDataToFile(req: Request, res: Response) {
+        const projectId = projectIdSchema.safeParse(req.params.projectId)
+        if(!projectId.success) throw projectId.error
+
+        const executorId = executorIdSchema.safeParse(req.params.executorId)
+        if(!executorId.success) throw executorId.error
+
+        const executionId = executionIdSchema.safeParse(req.params.executionId)
+        if(!executionId.success) throw executionId.error
+
+        const exportFormatType = exportFormatTypeSchema.safeParse(req.query)
+        if(!exportFormatType.success) throw exportFormatType.error 
+
+        const userId = req.user!.id
+
+        const result = await this.executorService.exportExecution(
+            projectId.data,
+            userId,
+            executorId.data,
+            executionId.data,
+            exportFormatType.data.type,
+        )
+
+        res.setHeader('Content-Type', result.mimetype)
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="${result.filename}"`,
+        )
+
+        return res.status(200).send(result.content)
+    }
+
     // TODO: DODATKOWO!!! dodac get dla danego terminala co zwraca uzyte zapytania z executions
 
     public routes(): void {
@@ -127,7 +163,8 @@ class QueryController extends Controller {
         this.router.get('/:projectId/executors', userMd.isUserPermitted, asyncHandler(this.getExecutorsList.bind(this)))
         this.router.patch('/:projectId/executors/:executorId', userMd.isUserPermitted, asyncHandler(this.updateExecutor.bind(this)))
         this.router.delete('/:projectId/executors/:executorId', userMd.isUserPermitted, asyncHandler(this.deleteExecutor.bind(this)))
+        this.router.get('/:projectId/executors/:executorId/executions/:executionId/export', userMd.isUserPermitted, asyncHandler(this.exportDataToFile.bind(this)))
     }
 }
 
-export default new QueryController().router
+export default new ExecutorController().router
