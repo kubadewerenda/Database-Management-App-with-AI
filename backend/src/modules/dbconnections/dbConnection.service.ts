@@ -124,27 +124,6 @@ export default class DbConnectionService {
         return (dbConn as any).dbType ?? DbType.POSTGRES
     }
 
-    public buildConnectionStringFromModel(dbConn: DbConnection): string {
-        const dbType = this._getDbTypeFromModel(dbConn)
-        const password = this._decryptPassword(dbConn.passwordEnc)
-
-        const user = encodeURIComponent(dbConn.username)
-        const pass = encodeURIComponent(password)
-        const host = dbConn.host
-        const port = dbConn.port || (dbType === DbType.POSTGRES ? 5432 : 3306)
-        const db = dbConn.database
-
-        let protocol: string
-        if(dbType === DbType.POSTGRES) {
-            protocol = 'postgres'
-        } else if(dbType === DbType.MARIADB) {
-            protocol = 'mariadb'
-        } else{
-            protocol = 'mysql'
-        }
-        return `${protocol}://${user}:${pass}@${host}:${port}/${db}`
-    }
-
     private async _testPostgresConnection(connectionString: string) {
         const client = new Client({
             connectionString,
@@ -404,6 +383,31 @@ export default class DbConnectionService {
         } else {
             await SchemaCache.create(payload as any)
         }
+    }
+
+    public getDbType(dbConn: DbConnection): SupportedDbType {
+        return this._getDbTypeFromModel(dbConn)
+    }
+
+    public buildConnectionStringFromModel(dbConn: DbConnection): string {
+        const dbType = this._getDbTypeFromModel(dbConn)
+        const password = this._decryptPassword(dbConn.passwordEnc)
+
+        const user = encodeURIComponent(dbConn.username)
+        const pass = encodeURIComponent(password)
+        const host = dbConn.host
+        const port = dbConn.port || (dbType === DbType.POSTGRES ? 5432 : 3306)
+        const db = dbConn.database
+
+        let protocol: string
+        if(dbType === DbType.POSTGRES) {
+            protocol = 'postgres'
+        } else if(dbType === DbType.MARIADB) {
+            protocol = 'mariadb'
+        } else{
+            protocol = 'mysql'
+        }
+        return `${protocol}://${user}:${pass}@${host}:${port}/${db}`
     }
 
     public async getDbModel(projectId: number, userId: number): Promise<DbConnection> {
