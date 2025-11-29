@@ -21,15 +21,15 @@ class DbConnectionController extends Controller {
         const projectId = projectIdSchema.safeParse(req.params.projectId)
         if(!projectId.success) throw projectId.error
 
-        const connectionString = UpsertConnectionSchema.safeParse(req.body)
-        if(!connectionString.success) throw connectionString.error
+        const parsedBody = UpsertConnectionSchema.safeParse(req.body)
+        if(!parsedBody.success) throw parsedBody.error
 
         const userId = req.user!.id
 
         const result = await this.dbConnectionService.upsertForProject(
             projectId.data,
             userId,
-            connectionString.data
+            parsedBody.data
         )
 
         return res.status(200).json({

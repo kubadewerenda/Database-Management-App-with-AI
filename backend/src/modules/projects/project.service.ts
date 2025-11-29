@@ -9,6 +9,8 @@ import DbConnectionService from '../dbconnections/dbConnection.service.js'
 import ChatService from '../chats/chat.service.js'
 import Executor from '../../models/executors/executor.model.js'
 import ExecutorService from '../executors/executor.service.js'
+import { SupportedDbType } from '../../types/dbConnection/dbConnection.type.js'
+import DbConnection from '../../models/projects/connection.model.js'
 
 type ProjectCreateData = {
     name: string,
@@ -27,6 +29,7 @@ type ProjectOverview = {
     project: Project,
     dbConnection: {
         connected: string
+        dbType: SupportedDbType | null
         latencyMs: number | null
     }
     schema: DbSchemaSnapshot,
@@ -74,40 +77,57 @@ export default class ProjectService {
     public async getProjectOverview(projectId: number, userId: number): Promise<ProjectOverview> {
         const project = await this._findOwned(projectId, userId)
 
-        let dbConnection = null
-        try {
-            dbConnection = await this.dbConnectionService.testSavedConnection(
+        const [executors, chat] = await Promise.all([
+            await this.executorService.listExecutors(
+                project.id,
+                userId
+            ),
+            await this.chatService.getOrCreateChatForProject(
                 project.id,
                 userId
             )
-        } catch {}
+        ])
 
-        let schema = null
+        let dbConnectionModel: DbConnection | null = null
+        let dbConnectionTest: { latencyMs: number } | null = null
+        let schema: DbSchemaSnapshot | null = null
+
         try {
-            schema = await this.dbConnectionService.getSchemaSnapshotForProject(
-                project.id,
+            dbConnectionModel = await this.dbConnectionService.getDbModel(
+                projectId,
                 userId
             )
-        } catch {}
+        } catch {
+            dbConnectionModel = null
+        }
 
-        const executors = await this.executorService.listExecutors(
-            project.id,
-            userId
-        )
+        if(dbConnectionModel) {
+            try {
+                const [testResult, snapshot] = await Promise.all([
+                    this.dbConnectionService.testSavedConnection(
+                        project.id,
+                        userId
+                    ),
+                    this.dbConnectionService.getSchemaSnapshotForProject(
+                        project.id,
+                        userId
+                    ),
+                ])
 
-        const chat = await this.chatService.getOrCreateChatForProject(
-            project.id,
-            userId
-        )
+                dbConnectionTest = testResult ?? null
+                schema = snapshot ?? null
+            } catch {}
+        }
 
         return {
-            message: dbConnection && schema 
+            message: dbConnectionTest && schema 
                 ? 'Project ready to work.'
                 : 'Project need to be connected to database.',
             project,
             dbConnection: {
-                connected: dbConnection?.latencyMs ? 'yes' : 'no',
-                latencyMs: dbConnection?.latencyMs ?? null
+                connected: dbConnectionTest?.latencyMs ? 'yes' : 'no',
+                dbType: dbConnectionModel?.dbType ?? null,
+                latencyMs: dbConnectionTest?.latencyMs ?? null
             },
             schema: schema ?? { tables: [] },
             executors: executors ?? [],
