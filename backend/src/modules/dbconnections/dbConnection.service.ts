@@ -129,10 +129,7 @@ export default class DbConnectionService {
             const tablesResp = await client.query(`
                 SELECT
                     t.table_schema,
-                    t.table_name,
-                    obj_description(
-                        (quote_ident(t.table_schema) || '.' || quote_ident(t.table_name))::regclass
-                    ) AS table_comment
+                    t.table_name
                 FROM information_schema.tables t
                 WHERE t.table_type = 'BASE TABLE'
                     AND t.table_schema = 'public'
@@ -175,8 +172,7 @@ export default class DbConnectionService {
                 tableMap.set(key, {
                     name: row.table_name,
                     schema: row.table_schema,
-                    columns: [],
-                    comment: row.table_comment ?? null
+                    columns: []
                 })
             }
 
