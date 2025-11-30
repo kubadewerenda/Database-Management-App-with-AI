@@ -11,7 +11,7 @@ import {
     Index
 } from 'sequelize-typescript'
 import Chat from './chat.model.js'
-import { ChatRole } from '../../enums/messages/messages.enum.js'
+import { ChatRole } from '../../enums/chats/chat.enum.js'
 
 @Table({
     tableName: 'messages',

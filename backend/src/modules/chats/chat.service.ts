@@ -1,23 +1,24 @@
-import { BadRequestException, NotFoundException } from '../../lib/errors.js'
+import { 
+    BadRequestException, 
+    NotFoundException 
+} from '../../lib/errors.js'
+
 import DbConnectionService from '../dbconnections/dbConnection.service.js'
 import AiProviderService from '../aiProvider/aiProvider.service.js'
 
+import Chat from '../../models/chats/chat.model.js'
+import Message from '../../models/chats/message.model.js'
+
 import { Op } from 'sequelize'
 import * as helpFunctions from '../../lib/utils/functions.js'
-
-
-import Chat from '../../models/chat/chat.model.js'
-import Message from '../../models/chat/message.model.js'
 
 import { 
     ChatHistoryMessage, 
     ChatHistoryResult, 
     SendMessageData 
 } from '../../types/chats/chat.type.js'
-import { ChatMessage } from '../../types/ai/aiProvider.js'
-import { ChatRole } from '../../enums/messages/messages.enum.js'
-
-const MAX_HISTORY_MESSAGES = 20
+import { ChatMessage } from '../../types/ai/aiProvider.type.js'
+import { ChatHistoryForAiLimit, ChatRole } from '../../enums/chats/chat.enum.js'
 
 export default class ChatService {
     private dbConnectionService: DbConnectionService
@@ -128,7 +129,7 @@ export default class ChatService {
         userId: number,
         options?: { limit?: number; beforeId?: number },
     ): Promise<ChatHistoryResult> {
-        const limit = options?.limit && options.limit > 0 ? options.limit : MAX_HISTORY_MESSAGES
+        const limit = options?.limit && options.limit > 0 ? options.limit : ChatHistoryForAiLimit.MAX_HISTORY_MESSAGES
         const beforeId = options?.beforeId
 
         const chat = await this._getChatOrThrow(projectId, chatId, userId)
@@ -183,9 +184,9 @@ export default class ChatService {
         const schema = await this.dbConnectionService.getSchemaSnapshotForProject(projectId, userId)
 
         const dbConn = await this.dbConnectionService.getDbModel(projectId, userId)
-        const dbType = await this.dbConnectionService.getDbType(dbConn)
+        const dbType = this.dbConnectionService.getDbType(dbConn)
 
-        const history = await this._getRawMessages(chat.id, MAX_HISTORY_MESSAGES)
+        const history = await this._getRawMessages(chat.id, ChatHistoryForAiLimit.MAX_HISTORY_MESSAGES)
         const historyForAi = this._mapMessagesToAiHistory(history)
 
         const aiResp = await this.aiProvider.generateSQLFromNeutralLanguage(

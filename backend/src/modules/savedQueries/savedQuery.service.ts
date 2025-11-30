@@ -1,37 +1,20 @@
-import { BadRequestException, NotFoundException } from '../../lib/errors.js'
-import { Op, where } from 'sequelize'
+import { 
+    BadRequestException, 
+    NotFoundException 
+} from '../../lib/errors.js'
 
-import SavedQuery from '../../models/queries/savedQuery.model.js'
-import Tag from '../../models/queries/tag.model.js'
-import Project from '../../models/projects/project.model.js'
+import SavedQuery from '../../models/savedQueries/savedQuery.model.js'
+import Tag from '../../models/savedQueries/tag.model.js'
 
+import { 
+    Op, 
+    where 
+} from 'sequelize'
+import * as helpFunctions from '../../lib/utils/functions.js'
 
-type SavedQueryPayload = {
-    name: string
-    description?: string | null
-    sql: string
-    tags?: string[]
-}
-
+import { SavedQueryPayload } from '../../types/savedQueries/savedQuery.type.js'
 
 export default class SavedQueryService {
-
-    private async _ensureProjectOwned(projectId: number, userId: number): Promise<Project> {
-        if (!projectId || !userId) {
-            throw new BadRequestException('Project and user are required.')
-        }
-
-        const project = await Project.findOne({
-            where: { id: projectId, ownerId: userId }
-        })
-
-        if (!project) {
-            throw new NotFoundException('Project not found.')
-        }
-
-        return project
-    }
-
     private async _getOrCreateTags(projectId: number, tagNames?: string[]): Promise<Tag[]> {
         if(!tagNames || tagNames.length === 0) return []
 
@@ -55,7 +38,7 @@ export default class SavedQueryService {
         userId: number,
         payload: SavedQueryPayload
     ) {
-        await this._ensureProjectOwned(projectId, userId)
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
         const { name, description = null, sql, tags } = payload
 
@@ -81,7 +64,7 @@ export default class SavedQueryService {
         userId: number,
         savedQueryId: number
     ): Promise<SavedQuery> {
-        await this._ensureProjectOwned(projectId, userId)
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
         const sq = await SavedQuery.findOne({
             where: { id: savedQueryId, projectId: projectId },
@@ -99,7 +82,7 @@ export default class SavedQueryService {
         savedQueryId: number,
         payload: Partial<SavedQueryPayload>
     ) {
-        await this._ensureProjectOwned(projectId, userId)
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
         const sq = await SavedQuery.findOne({
             where: { id: savedQueryId, projectId: projectId }
@@ -124,7 +107,7 @@ export default class SavedQueryService {
         userId: number,
         savedQueryId: number
     ) {
-        await this._ensureProjectOwned(projectId, userId)
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
         const sq = await SavedQuery.findOne({
             where: { id: savedQueryId, projectId: projectId }
@@ -144,7 +127,7 @@ export default class SavedQueryService {
             beforeId?: number 
         }
     ) {
-        await this._ensureProjectOwned(projectId, userId)
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
         const limit = options?.limit && options.limit > 0 ? options.limit : 20
         const beforeId = options?.beforeId
@@ -183,7 +166,7 @@ export default class SavedQueryService {
     }
 
     public async listSavedQueriesTags(projectId: number, userId: number) {
-        await this._ensureProjectOwned(projectId, userId)
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
         return await Tag.findAll({
             where: { projectId },
@@ -192,7 +175,7 @@ export default class SavedQueryService {
     }
 
     public async deleteSavedQueriesTag(projectId: number, userId: number, tagId: number) {
-        await this._ensureProjectOwned(projectId, userId)
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
         const tag = await Tag.findOne({
             where: { id: tagId, projectId }

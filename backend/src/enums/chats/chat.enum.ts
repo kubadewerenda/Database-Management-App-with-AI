@@ -3,3 +3,7 @@ export enum ChatRole {
     ASSISTANT = 'assistant',
     SYSTEM = 'system',
 }
+
+export enum ChatHistoryForAiLimit {
+    MAX_HISTORY_MESSAGES = 20
+}

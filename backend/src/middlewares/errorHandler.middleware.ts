@@ -9,7 +9,7 @@ import {
     ForbiddenException,
     NotFoundException,
 } from '../lib/errors.js'
-import { ErrorCodeEnum } from '../enums/error-code.enum.js'
+import { ErrorCodeEnum } from '../enums/system/error/error-code.enum.js'
 import { ZodError } from 'zod'
 import { UniqueConstraintError, ValidationError as SequelizeValidationError } from 'sequelize'
 

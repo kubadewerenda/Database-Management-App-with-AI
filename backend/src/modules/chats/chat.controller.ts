@@ -1,5 +1,10 @@
-import { Request, Response } from 'express'
+import { 
+    Request, 
+    Response 
+} from 'express'
+
 import Controller from '../../controllers/main.controller.js'
+
 import ChatService from './chat.service.js'
 
 import * as userMd from '../../middlewares/users/user.middleware.js'

@@ -1,11 +1,15 @@
-import OpenAI from 'openai'
-import { ChatMessage, AiSqlResponse, OpenAiMessage } from '../../types/ai/aiProvider.js'
-import { DbSchemaSnapshot } from '../../types/schemaCache/schemaCache.js'
 import { BadRequestException } from '../../lib/errors.js'
-import { DbType } from '../../enums/dbConnection/dbConnection.enum.js'
-import DbConnectionService from '../dbconnections/dbConnection.service.js'
 
-const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-mini'
+import OpenAI from 'openai'
+
+import { 
+    ChatMessage, 
+    AiSqlResponse, 
+    OpenAiMessage 
+} from '../../types/ai/aiProvider.type.js'
+import { DbType } from '../../enums/dbConnection/dbConnection.enum.js'
+import { DbSchemaSnapshot } from '../../types/dbConnections/dbConnection.type.js'
+
 
 export default class AiProviderService {
     private client: OpenAI
@@ -243,7 +247,7 @@ export default class AiProviderService {
 
         try {
             const completion = await this.client.chat.completions.create({
-                model: DEFAULT_MODEL,
+                model: String(process.env.OPENAI_MODEL),
                 messages: [
                     { role: 'system', content: systemPrompt },
                     { role: 'system', content: schemaPrompt },
