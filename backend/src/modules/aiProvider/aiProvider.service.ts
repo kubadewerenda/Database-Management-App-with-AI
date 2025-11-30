@@ -2,6 +2,8 @@ import OpenAI from 'openai'
 import { ChatMessage, AiSqlResponse, OpenAiMessage } from '../../types/ai/aiProvider.js'
 import { DbSchemaSnapshot } from '../../types/schemaCache/schemaCache.js'
 import { BadRequestException } from '../../lib/errors.js'
+import { DbType } from '../../enums/dbConnection/dbConnection.enum.js'
+import DbConnectionService from '../dbconnections/dbConnection.service.js'
 
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-mini'
 
@@ -55,11 +57,14 @@ export default class AiProviderService {
             }))
     }
 
-    private _buildSystemPrompt(): string {
+    private _buildSystemPrompt(dbType: DbType): string {
         return `
             You are an assistant that helps the user work **only** with their project's relational SQL database.
-            The underlying engine may be PostgreSQL, MySQL or MariaDB, but you always write ANSI-compatible SQL
-            that works across these engines (unless the user explicitly asks for engine-specific features).
+            The database engine for THIS project is: ${dbType}.
+            You MUST assume that all queries you generate will be executed on ${dbType}.
+
+            The underlying engine may be PostgreSQL, MySQL or MariaDB in general, but for this project it is
+            concretely ${dbType}. You can use features that are safe and commonly supported by ${dbType}.
 
             CRITICAL RULES (you MUST respect all of them):
 
@@ -152,7 +157,7 @@ export default class AiProviderService {
                                 the user to write a question related to the database.
 
             IF THE MESSAGE CONTAINS A DATABASE/SQL-RELATED REQUEST:
-                - exactly ONE safe SELECT or WITH ... SELECT query based ONLY on the given schema.
+                - Generate exactly ONE safe SELECT or WITH ... SELECT query based ONLY on the given schema.
 
             LANGUAGE REQUIREMENT:
                 - The "explanation" MUST be written strictly in the SAME LANGUAGE as this message from the user.
@@ -219,18 +224,20 @@ export default class AiProviderService {
         return { sql, explanation }
     }
 
-    public async generateSQLFromNeutralLanguage(params: {
-        schema: DbSchemaSnapshot
-        messages: ChatMessage[]
-        userMessage: string
+    public async generateSQLFromNeutralLanguage(
+        params: {
+            schema: DbSchemaSnapshot
+            dbType: DbType
+            messages: ChatMessage[]
+            userMessage: string
     }): Promise<AiSqlResponse> {
 
-        const { schema, messages, userMessage } = params
+        const { schema, dbType, messages, userMessage } = params
 
         const schemaSummary = this._buildSchemaSummary(schema)
         const historyMessages = this._mapHistoryToOpenAiMessages(messages)
 
-        const systemPrompt = this._buildSystemPrompt()
+        const systemPrompt = this._buildSystemPrompt(dbType)
         const schemaPrompt = this._buildSchemaPrompt(schemaSummary)
         const userPrompt = this._buildUserPrompt(userMessage)
 

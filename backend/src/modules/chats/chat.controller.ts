@@ -4,11 +4,13 @@ import ChatService from './chat.service.js'
 
 import * as userMd from '../../middlewares/users/user.middleware.js'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware.js'
-import { BadRequestException, UnauthorizedException } from '../../lib/errors.js'
-import { ErrorCodeEnum } from '../../enums/error-code.enum.js'
 
 import { projectIdSchema } from '../projects/project.validation.js'
-import { sendChatMessageSchema } from './chat.validation.js'
+import { 
+    chatHistoryInfiniteSchema,
+    chatIdSchema, 
+    sendChatMessageSchema
+} from './chat.validation.js'
 
 
 class ChatController extends Controller {
@@ -23,25 +25,55 @@ class ChatController extends Controller {
         const projectId = projectIdSchema.safeParse(req.params.projectId)
         if(!projectId.success) throw projectId.error
 
+        const chatId = chatIdSchema.safeParse(req.params.chatId)
+        if(!chatId.success) throw chatId.error
+
+        const parsedQuery = chatHistoryInfiniteSchema.safeParse(req.query)
+        if (!parsedQuery.success) throw parsedQuery.error
+
+        const { limit, beforeId } = parsedQuery.data
+
         const userId = req.user!.id
 
-        const limit = req.query.limit ? Number(req.query.limit) : undefined
-        const beforeId = req.query.beforeId ? Number(req.query.beforeId) : undefined
-
-        const chatHistory = await this.chatService.getChatHistory(projectId.data, userId, 
+        const chatHistory = await this.chatService.getChatHistory(
+            projectId.data, 
+            chatId.data,
+            userId,
             {
                 limit,
                 beforeId,
-        })
+            }
+        )
+
+        return res.status(200).json(chatHistory)
+    }
+
+    private async clearChatHistory(req: Request, res: Response) {
+        const projectId = projectIdSchema.safeParse(req.params.projectId)
+        if(!projectId.success) throw projectId.error
+
+        const chatId = chatIdSchema.safeParse(req.params.chatId)
+        if(!chatId.success) throw chatId.error
+
+        const userId = req.user!.id
+
+        await this.chatService.clearChatHistory(
+            projectId.data, 
+            chatId.data,
+            userId
+        )
 
         return res.status(200).json({
-            ...chatHistory
+            message: 'Chat history cleaned.'
         })
     }
 
     private async sendMessage(req: Request, res: Response) {
         const projectId = projectIdSchema.safeParse(req.params.projectId)
         if(!projectId.success) throw projectId.error
+
+        const chatId = chatIdSchema.safeParse(req.params.chatId)
+        if(!chatId.success) throw chatId.error
 
         const parsedBody = sendChatMessageSchema.safeParse(req.body)
         if(!parsedBody.success) throw parsedBody.error
@@ -50,6 +82,7 @@ class ChatController extends Controller {
 
         const result = await this.chatService.sendMessage(
             projectId.data,
+            chatId.data,
             userId,
             parsedBody.data
         )
@@ -61,8 +94,9 @@ class ChatController extends Controller {
     }
     
     public routes(): void {
-        this.router.get('/:projectId/chat/history', userMd.isUserPermitted, asyncHandler(this.getChatHistory.bind(this)))
-        this.router.post('/:projectId/chat/message', userMd.isUserPermitted, asyncHandler(this.sendMessage.bind(this)))
+        this.router.get('/:projectId/chat/:chatId/history', userMd.isUserPermitted, asyncHandler(this.getChatHistory.bind(this)))
+        this.router.delete('/:projectId/chat/:chatId/history/clear', userMd.isUserPermitted, asyncHandler(this.clearChatHistory.bind(this)))
+        this.router.post('/:projectId/chat/:chatId/message', userMd.isUserPermitted, asyncHandler(this.sendMessage.bind(this)))
     }
 }
 

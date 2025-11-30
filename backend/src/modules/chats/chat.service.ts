@@ -1,33 +1,21 @@
 import { BadRequestException, NotFoundException } from '../../lib/errors.js'
-import Project from '../../models/projects/project.model.js'
-import Chat from '../../models/chat/chat.model.js'
-import Message from '../../models/chat/message.model.js'
-import SchemaCache from '../../models/projects/schemaCache.model.js'
 import DbConnectionService from '../dbconnections/dbConnection.service.js'
 import AiProviderService from '../aiProvider/aiProvider.service.js'
-import { AiChatMessage } from '../../types/ai/aiProvider.js'
-import { ChatRole } from '../../enums/messages/messages.enum.js'
-import type { DbSchemaSnapshot } from '../../types/schemaCache/schemaCache.js'
+
 import { Op } from 'sequelize'
+import * as helpFunctions from '../../lib/utils/functions.js'
 
-type SendMessageData = {
-    message: string
-}
 
-type ChatHistoryMessage = {
-    id: number
-    role: 'user' | 'assistant' | 'system'
-    content: string
-    sqlDraft: string | null
-    createdAt: Date
-}
+import Chat from '../../models/chat/chat.model.js'
+import Message from '../../models/chat/message.model.js'
 
-type ChatHistoryResult = {
-    messages: ChatHistoryMessage[]
-    nextCursor: number | null     
-    hasMore: boolean
-}
-
+import { 
+    ChatHistoryMessage, 
+    ChatHistoryResult, 
+    SendMessageData 
+} from '../../types/chats/chat.type.js'
+import { ChatMessage } from '../../types/ai/aiProvider.js'
+import { ChatRole } from '../../enums/messages/messages.enum.js'
 
 const MAX_HISTORY_MESSAGES = 20
 
@@ -40,27 +28,19 @@ export default class ChatService {
         this.aiProvider = new AiProviderService()
     }
 
-    private async _getOrCreateChat(projectId: number, userId: number): Promise<Chat> {
-        if(!projectId || !userId) {
-            throw new BadRequestException('Project and user are required.')
-        }
+    private async _getChatOrThrow(
+        projectId: number,
+        chatId: number,
+        userId: number,
+    ): Promise<Chat> {
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
-        const project = await Project.findOne({
-            where: { id: projectId, ownerId: userId }
+        const chat = await Chat.findOne({
+            where: { id: chatId, projectId },
         })
 
-        if(!project) {
-            throw new NotFoundException('Project not found.')
-        }
-
-        let chat = await Chat.findOne({
-            where: { projectId: projectId }
-        })
         if(!chat) {
-            chat = await Chat.create({
-                projectId,
-                title: null
-            } as any)
+            throw new NotFoundException('Chat not found for this project.',)
         }
 
         return chat
@@ -84,14 +64,11 @@ export default class ChatService {
         })
     }
 
-    private async _getChatHistoryForAi(chatId: number): Promise<AiChatMessage[]> {
-        const messages = await this._getRawMessages(chatId, MAX_HISTORY_MESSAGES)
+    private _mapMessagesToAiHistory(messages: Message[]): ChatMessage[] {
+        const ordered = [...messages].reverse()
 
-        const ordered = [...messages].reverse() 
-
-        return ordered.map((m) => ({
-            role:
-                m.role === ChatRole.USER
+        return ordered.map(m => ({
+            role: m.role === ChatRole.USER
                     ? 'user'
                     : m.role === ChatRole.ASSISTANT
                         ? 'assistant'
@@ -101,31 +78,12 @@ export default class ChatService {
         }))
     }
 
-    public async getOrCreateChatForProject(
-        projectId: number, 
-        userId: number,
-    ): Promise<Chat> {
-        return this._getOrCreateChat(projectId, userId)
-    }
+    private _mapMessagesToHistoryResult(
+        messages: Message[],
+    ): { items: ChatHistoryMessage[]; nextCursor: number | null } {
+        const ordered = [...messages].reverse()
 
-    public async getChatHistory(
-        projectId: number, 
-        userId: number,
-        options?: { limit?: number; beforeId?: number },
-    ): Promise<ChatHistoryResult> {
-        const limit = options?.limit && options.limit > 0 ? options.limit : MAX_HISTORY_MESSAGES
-        const beforeId = options?.beforeId
-
-        const chat = await this._getOrCreateChat(projectId, userId)
-        if(!chat) {
-            throw new NotFoundException('Chat not found for this project.')
-        }
-
-        const rawMessages = await this._getRawMessages(chat.id, limit, beforeId)
-
-        const ordered = [...rawMessages].reverse()
-
-        const messages: ChatHistoryMessage[] = ordered.map((m) => ({
+        const resultItems: ChatHistoryMessage[] = ordered.map(m => ({
             id: m.id,
             role:
                 m.role === ChatRole.USER
@@ -135,21 +93,77 @@ export default class ChatService {
                     : 'system',
             content: m.content,
             sqlDraft: m.sqlDraft ?? null,
-            createdAt: m.createdAt, 
+            createdAt: m.createdAt,
         }))
 
         const oldest = ordered[0]
         const nextCursor = oldest ? oldest.id : null
 
+        return { items: resultItems, nextCursor }
+    }
+
+    public async getOrCreateChatForProject(
+        projectId: number, 
+        userId: number,
+    ): Promise<Chat> {
+        const project = await helpFunctions._ensureProjectOwned(projectId, userId)
+
+        let chat = await Chat.findOne({
+            where: { projectId: project.id },
+        })
+
+        if(!chat) {
+            chat = await Chat.create({
+                projectId: project.id,
+                title: null,
+            } as any)
+        }
+
+        return chat    
+    }
+
+    public async getChatHistory(
+        projectId: number, 
+        chatId: number,
+        userId: number,
+        options?: { limit?: number; beforeId?: number },
+    ): Promise<ChatHistoryResult> {
+        const limit = options?.limit && options.limit > 0 ? options.limit : MAX_HISTORY_MESSAGES
+        const beforeId = options?.beforeId
+
+        const chat = await this._getChatOrThrow(projectId, chatId, userId)
+        if(!chat) {
+            throw new NotFoundException('Chat not found for this project.')
+        }
+
+        const rawMessages = await this._getRawMessages(chat.id, limit, beforeId)
+
+        const { items, nextCursor } = this._mapMessagesToHistoryResult(rawMessages)
+
         return {
-            messages,
+            messages: items,
             nextCursor,
             hasMore: rawMessages.length === limit,
         }
     }
 
+    public async clearChatHistory(
+        projectId: number,
+        chatId: number,
+        userId: number
+    ) {
+        await helpFunctions._ensureProjectOwned(projectId, userId)
+
+        const chat = await this._getChatOrThrow(projectId, chatId, userId)
+
+        await Message.destroy({
+            where: { chatId: chat.id }
+        })
+    }
+
     public async sendMessage(
         projectId: number,
+        chatId: number,
         userId: number,
         { message }: SendMessageData,
     ) {
@@ -157,7 +171,7 @@ export default class ChatService {
             throw new BadRequestException('Message cannot be empty.')
         }
 
-        const chat = await this._getOrCreateChat(projectId, userId)
+        const chat = await this._getChatOrThrow(projectId, chatId, userId)
 
         const userMessage = await Message.create({
             chatId: chat.id,
@@ -168,11 +182,17 @@ export default class ChatService {
 
         const schema = await this.dbConnectionService.getSchemaSnapshotForProject(projectId, userId)
 
-        const history = await this._getChatHistoryForAi(chat.id)
+        const dbConn = await this.dbConnectionService.getDbModel(projectId, userId)
+        const dbType = await this.dbConnectionService.getDbType(dbConn)
 
-        const aiResp = await this.aiProvider.generateSQLFromNeutralLanguage({
+        const history = await this._getRawMessages(chat.id, MAX_HISTORY_MESSAGES)
+        const historyForAi = this._mapMessagesToAiHistory(history)
+
+        const aiResp = await this.aiProvider.generateSQLFromNeutralLanguage(
+        {
             schema,
-            messages: history,
+            dbType,
+            messages: historyForAi,
             userMessage: message,
         })
 
