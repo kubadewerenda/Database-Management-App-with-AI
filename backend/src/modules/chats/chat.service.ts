@@ -3,7 +3,7 @@ import {
     NotFoundException 
 } from '../../lib/errors.js'
 
-import DbConnectionService from '../dbConnection/dbConnection.service.js'
+import DbConnectionService from '../dbConnections/dbConnection.service.js'
 import AiProviderService from '../aiProvider/aiProvider.service.js'
 
 import Chat from '../../models/chats/chat.model.js'

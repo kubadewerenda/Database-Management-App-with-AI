@@ -1,6 +1,6 @@
 import { BadRequestException } from '../../lib/errors.js'
 
-import DbConnectionService from '../dbConnection/dbConnection.service.js'
+import DbConnectionService from '../dbConnections/dbConnection.service.js'
 
 import Execution from '../../models/executors/execution.model.js'
 import Executor from '../../models/executors/executor.model.js'
