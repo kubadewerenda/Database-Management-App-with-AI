@@ -3,7 +3,7 @@ import {
     ForbiddenException 
 } from '../../lib/errors.js'
 
-import DbConnectionService from '../dbconnections/dbConnection.service.js'
+import DbConnectionService from '../dbConnection/dbConnection.service.js'
 import ChatService from '../chats/chat.service.js'
 import ExecutorService from '../executors/executor.service.js'
 

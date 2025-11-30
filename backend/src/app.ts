@@ -10,7 +10,7 @@ import { attachUserFromAuth } from './middlewares/users/user.middleware.js'
 
 import UserController from './modules/users/user.controller.js'
 import ProjectController from './modules/projects/project.controller.js'
-import DbConnectionController from './modules/dbconnections/dbConnection.controller.js'
+import DbConnectionController from './modules/dbConnection/dbConnection.controller.js'
 import SavedQueryController from './modules/savedQueries/savedQuery.controller.js'
 import ChatController from './modules/chats/chat.controller.js'
 import ExecutionQueryController from './modules/executors/executor.controller.js'

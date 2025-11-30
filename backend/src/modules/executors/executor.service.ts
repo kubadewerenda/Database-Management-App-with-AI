@@ -1,6 +1,6 @@
 import { BadRequestException } from '../../lib/errors.js'
 
-import DbConnectionService from '../dbconnections/dbConnection.service.js'
+import DbConnectionService from '../dbConnection/dbConnection.service.js'
 
 import Execution from '../../models/executors/execution.model.js'
 import Executor from '../../models/executors/executor.model.js'
@@ -13,7 +13,7 @@ import { DbType } from '../../enums/dbConnection/dbConnection.enum.js'
 import { 
     ExportFormat, 
     QueryLimit 
-} from '../../enums/Executors/executor.enum.js'
+} from '../../enums/executors/executor.enum.js'
 import { 
     DbExecutionEnv, 
     ExecutionCoreResult, 

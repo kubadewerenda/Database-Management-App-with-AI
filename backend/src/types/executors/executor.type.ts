@@ -1,5 +1,5 @@
 import { DbType } from '../../enums/dbConnection/dbConnection.enum'
-import { ExportFormat } from '../../enums/Executors/executor.enum'
+import { ExportFormat } from '../../enums/executors/executor.enum'
 
 export type QueryData = {
     sql: string
