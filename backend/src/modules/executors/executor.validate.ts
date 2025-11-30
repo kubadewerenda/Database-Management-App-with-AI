@@ -1,5 +1,5 @@
 import z from 'zod'
-import { ExportFormat } from '../../enums/executor/executor.enum'
+import { ExportFormat } from '../../enums/executors/executor.enum'
 
 export const querySchema = z.object({
     sql: z.string().min(1, 'SQL is required.'),

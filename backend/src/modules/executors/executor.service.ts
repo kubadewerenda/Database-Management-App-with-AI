@@ -13,7 +13,7 @@ import { DbType } from '../../enums/dbConnection/dbConnection.enum.js'
 import { 
     ExportFormat, 
     QueryLimit 
-} from '../../enums/executor/executor.enum.js'
+} from '../../enums/executors/executor.enum.js'
 import { 
     DbExecutionEnv, 
     ExecutionCoreResult, 
