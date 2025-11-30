@@ -1,4 +1,8 @@
-import { Request, Response } from 'express'
+import { 
+    Request, 
+    Response 
+} from 'express'
+
 import Controller from '../../controllers/main.controller.js'
 
 import ExecutorService from './executor.service.js'
@@ -74,7 +78,7 @@ class ExecutorController extends Controller {
         )
 
         return res.status(200).json({
-            items: executors,
+            executors
         })
     }
 

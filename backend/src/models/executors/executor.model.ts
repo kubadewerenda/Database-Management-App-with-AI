@@ -13,7 +13,7 @@ import {
     Default,
 } from 'sequelize-typescript'
 import Project from '../projects/project.model.js'
-import Execution from '../queries/execution.model.js'
+import Execution from './execution.model.js'
 
 @Table({
     tableName: 'executors',

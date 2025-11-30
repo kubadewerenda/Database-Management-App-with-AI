@@ -1,27 +1,28 @@
+import {
+    BadRequestException, 
+    UnauthorizedException 
+} from '../../lib/errors.js'
+
+import User from '../../models/users/user.model.js'
+
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { OAuth2Client } from 'google-auth-library'
-
-import User from '../../models/users/user.model.js'
-import { AuthProvider, UserRole, UserStatus } from '../../enums/users/user.enum.js'
-import { BadRequestException, UnauthorizedException } from '../../lib/errors.js'
-import { ErrorCodeEnum } from '../../enums/error-code.enum.js'
 import { sendMail } from '../../lib/mailer.js'
 
-type CredentialsRegisterD = {
-    username: string
-    email: string
-    password: string
-    passwordCheck: string
-}
-type CredentialsD = { email: string, password: string }
-type UpdateMeD = {
-    username?: string,
-    email?: string
-    currentPassword?: string
-    newPassword?: string
-}
+import { 
+    AuthProvider, 
+    UserRole, 
+    UserStatus 
+} from '../../enums/users/user.enum.js'
+import { ErrorCodeEnum } from '../../enums/system/error/error-code.enum.js'
+import { 
+    CredentialsD, 
+    CredentialsRegisterD, 
+    UpdateMeD 
+} from '../../types/users/user.type.js'
+
 
 export default class UserService {
     private readonly bcryptRounds: number = Number(process.env.BCRYPT_ROUNDS)

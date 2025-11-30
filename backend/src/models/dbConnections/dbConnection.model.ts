@@ -12,8 +12,8 @@ import {
     Default,
     Index,
 } from 'sequelize-typescript'
-import Project from './project.model.js'
-import SchemaCache from './schemaCache.model.js'
+import Project from '../projects/project.model'
+import DbSchema from './dbSchema.model'
 import { DbType } from '../../enums/dbConnection/dbConnection.enum.js'
 
 @Table({
@@ -21,7 +21,7 @@ import { DbType } from '../../enums/dbConnection/dbConnection.enum.js'
     timestamps: true,
     indexes: [
         { fields: ['project_id', 'db_type'] },
-        { unique: true, fields: ['project_id', 'name'] },
+        { unique: true, fields: ['project_id'] },
     ],
 })
 export default class DbConnection extends Model<DbConnection> {
@@ -35,11 +35,6 @@ export default class DbConnection extends Model<DbConnection> {
     @Index
     @Column({ field: 'project_id', type: DataType.BIGINT })
     projectId!: number
-
-    // TODO: wywalic na final
-    @AllowNull(true)
-    @Column(DataType.STRING)
-    name!: string | null
 
     @AllowNull(false)
     @Column(DataType.STRING)
@@ -78,10 +73,10 @@ export default class DbConnection extends Model<DbConnection> {
     })
     project!: Project
 
-    @HasOne(() => SchemaCache, {
+    @HasOne(() => DbSchema, {
         foreignKey: 'connectionId',
         onDelete: 'CASCADE',
         hooks: true,
     })
-    schemaCache!: SchemaCache
+    dbSchema!: DbSchema
 }

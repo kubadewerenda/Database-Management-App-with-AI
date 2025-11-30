@@ -14,11 +14,11 @@ import {
     HasMany,
 } from 'sequelize-typescript'
 import User from '../users/user.model.js'
-import DbConnection from './connection.model.js'
-import Chat from '../chat/chat.model.js'
+import DbConnection from '../dbConnections/dbConnection.model.js'
+import Chat from '../chats/chat.model.js'
 import Executor from '../executors/executor.model.js'
-import SavedQuery from '../queries/savedQuery.model.js'
-import Tag from '../queries/tag.model.js'
+import SavedQuery from '../savedQueries/savedQuery.model.js'
+import Tag from '../savedQueries/tag.model.js'
 
 @Table({
     tableName: 'projects',
@@ -59,7 +59,10 @@ export default class Project extends Model<Project> {
     @Column({ field: 'owner_id', type: DataType.BIGINT })
     ownerId!: number
 
-    @BelongsTo(() => User, { as: 'owner' })
+    @BelongsTo(() => User, {
+        as: 'owner',
+        foreignKey: 'ownerId',
+    })
     owner!: User
 
     @HasOne(() => DbConnection, {
@@ -69,7 +72,7 @@ export default class Project extends Model<Project> {
     })
     dbConnection!: DbConnection
 
-    @HasMany(() => Chat, {
+    @HasOne(() => Chat, {
         foreignKey: 'projectId',
         onDelete: 'CASCADE',
         hooks: true,

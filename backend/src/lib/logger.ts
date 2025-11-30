@@ -3,7 +3,7 @@ import pino from 'pino'
 const isProd = process.env.NODE_ENV === 'production'
 
 export const logger = pino({
-    name: 'yourshop-backend',
+    name: 'dbap',
     level: isProd ? 'info' : 'debug',
     transport: isProd ? undefined : { target: 'pino-pretty' },
     redact: {

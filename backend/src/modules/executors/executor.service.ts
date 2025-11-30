@@ -2,7 +2,7 @@ import { BadRequestException } from '../../lib/errors.js'
 
 import DbConnectionService from '../dbconnections/dbConnection.service.js'
 
-import Execution from '../../models/queries/execution.model.js'
+import Execution from '../../models/executors/execution.model.js'
 import Executor from '../../models/executors/executor.model.js'
 
 import * as helpFunctions from '../../lib/utils/functions.js'
@@ -10,7 +10,10 @@ import { Client } from 'pg'
 import mysql from 'mysql2/promise'
 
 import { DbType } from '../../enums/dbConnection/dbConnection.enum.js'
-import { ExportFormat } from '../../enums/Executors/executor.enum.js'
+import { 
+    ExportFormat, 
+    QueryLimit 
+} from '../../enums/Executors/executor.enum.js'
 import { 
     DbExecutionEnv, 
     ExecutionCoreResult, 
@@ -18,8 +21,6 @@ import {
     QueryData, 
     SupportedExportFormat 
 } from '../../types/executors/executor.type.js'
-
-const MAX_RETURNED_ROWS = 500
 
 export default class ExecutorService {
     private dbConnectionService: DbConnectionService
@@ -43,10 +44,6 @@ export default class ExecutorService {
         if(!startsWithSelect && !startsWithWith) {
             throw new BadRequestException('Only SELECT queries (including WITH CTE) are allowed.')
         }
-    }
-
-    private async _ensureProjectOwned(projectId: number, userId: number) {
-        await helpFunctions._ensureProjectOwned(projectId, userId)
     }
 
     private async _generateDefaultExecutorName(projectId: number): Promise<string> {
@@ -79,7 +76,7 @@ export default class ExecutorService {
         userId: number,
         executorId?: number
     ): Promise<Executor> {
-        await this._ensureProjectOwned(projectId, userId)
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
         await this._unsetPinnedForProject(projectId)
 
@@ -385,13 +382,13 @@ export default class ExecutorService {
     }
 
     public async createExecutor(projectId: number, userId: number) {
-        await this._ensureProjectOwned(projectId, userId)
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
         return await this._resolveExecutor(projectId, userId)
     }
 
     public async listExecutors(projectId: number, userId: number) {
-        await this._ensureProjectOwned(projectId, userId)
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
         const executors = await Executor.findAll({
             where: { projectId },
@@ -407,7 +404,7 @@ export default class ExecutorService {
         executorId: number,
         name: string,
     ) {
-        await this._ensureProjectOwned(projectId, userId)
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
         const executor = await Executor.findOne({
             where: { id: executorId, projectId },
@@ -427,7 +424,7 @@ export default class ExecutorService {
         userId: number,
         executorId: number
     ) {
-        await this._ensureProjectOwned(projectId, userId)
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
         const executor = await Executor.findOne({
             where: { id: executorId, projectId }
@@ -447,7 +444,7 @@ export default class ExecutorService {
         executorId: number,
         { sql, explain, maxReturnedRows }: QueryData,
     ) {
-        await this._ensureProjectOwned(projectId, userId)
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
         this._validateSelectOnly(sql)
 
@@ -461,7 +458,7 @@ export default class ExecutorService {
 
         const effectiveMax = maxReturnedRows && maxReturnedRows > 0
             ? Math.min(maxReturnedRows, 1000)
-            : MAX_RETURNED_ROWS
+            : QueryLimit.MAX_RETURNED_ROWS
 
         const core = await this._executeByDbType(
             dbType,
@@ -503,7 +500,7 @@ export default class ExecutorService {
         executionId: number,
         format: SupportedExportFormat,
     ): Promise<ExportExecutionResult> {
-        await this._ensureProjectOwned(projectId, userId)
+        await helpFunctions._ensureProjectOwned(projectId, userId)
 
         const { dbType, connectionString } = await this._getDbExecutionEnv(projectId, userId)
 
@@ -522,7 +519,7 @@ export default class ExecutorService {
             connectionString,
             sql,
             false,
-            MAX_RETURNED_ROWS
+            QueryLimit.MAX_RETURNED_ROWS
         )
 
         return this._buildExportResult(format, executionId, sql, core)

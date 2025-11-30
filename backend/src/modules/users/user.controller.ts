@@ -1,11 +1,22 @@
-import { Request, Response } from 'express'
+import { 
+    Request, 
+    Response 
+} from 'express'
+
 import Controller from '../../controllers/main.controller.js'
+
 import UserService from './user.service.js'
 
 import * as userMd from '../../middlewares/users/user.middleware.js'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware.js'
 
-import { registerSchema, loginSchema, updateUserSchema, googleCallbackSchema, verifyEmailSchema } from './user.validation.js'
+import { 
+    registerSchema, 
+    loginSchema, 
+    updateUserSchema, 
+    googleCallbackSchema, 
+    verifyEmailSchema 
+} from './user.validation.js'
 
 class UserController extends Controller {
     private userService: UserService

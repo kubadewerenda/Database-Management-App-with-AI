@@ -1,12 +1,23 @@
-import { Request, Response } from 'express'
+import { 
+    Request, 
+    Response 
+} from 'express'
+
 import Controller from '../../controllers/main.controller.js'
+
 import ProjectService from './project.service.js'
+
 import Project from '../../models/projects/project.model.js'
 
 import * as userMd from '../../middlewares/users/user.middleware.js'
 import { asyncHandler } from '../../middlewares/asyncHandler.middleware.js'
 
-import { projectIdSchema, projectCreateSchema, projectUpdateSchema, projectListPaginationSchema } from './project.validation.js'
+import { 
+    projectIdSchema, 
+    projectCreateSchema, 
+    projectUpdateSchema, 
+    projectListPaginationSchema 
+} from './project.validation.js'
 
 
 class ProjectController extends Controller {

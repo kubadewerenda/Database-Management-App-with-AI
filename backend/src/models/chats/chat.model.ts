@@ -31,11 +31,6 @@ export default class Chat extends Model<Chat> {
     @Column({ field: 'project_id', type: DataType.BIGINT })
     projectId!: number
 
-    // TODO: wywalic na final
-    @AllowNull(true)
-    @Column(DataType.STRING)
-    title!: string | null
-
     @BelongsTo(() => Project, {
         as: 'project',
     })

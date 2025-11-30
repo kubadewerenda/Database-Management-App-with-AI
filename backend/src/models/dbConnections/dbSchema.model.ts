@@ -10,15 +10,15 @@ import {
     BelongsTo,
     Unique,
 } from 'sequelize-typescript'
-import DbConnection from './connection.model.js'
-import type { DbSchemaSnapshot } from '../../types/schemaCache/schemaCache.js'
+import DbConnection from './dbConnection.model.js'
+import { DbSchemaSnapshot } from '../../types/dbConnections/dbConnection.type.js'
 
 @Table({
-    tableName: 'schema_cache',
+    tableName: 'db_schema',
     timestamps: true,
     indexes: [{ unique: true, fields: ['connection_id'] }],
 })
-export default class SchemaCache extends Model<SchemaCache> {
+export default class DbSchema extends Model<DbSchema> {
     @PrimaryKey
     @AutoIncrement
     @Column(DataType.BIGINT)

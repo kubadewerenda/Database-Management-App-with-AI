@@ -1,58 +1,26 @@
-import Project from '../../models/projects/project.model.js'
-import { BadRequestException, ForbiddenException } from '../../lib/errors.js'
-import * as helpFunctions from '../../lib/utils/functions.js'
-import { Op } from 'sequelize'
-
-import { DbSchemaSnapshot } from '../../types/schemaCache/schemaCache.js'
+import { 
+    BadRequestException, 
+    ForbiddenException 
+} from '../../lib/errors.js'
 
 import DbConnectionService from '../dbconnections/dbConnection.service.js'
 import ChatService from '../chats/chat.service.js'
-import Executor from '../../models/executors/executor.model.js'
 import ExecutorService from '../executors/executor.service.js'
-import { SupportedDbType } from '../../types/dbConnection/dbConnection.type.js'
-import DbConnection from '../../models/projects/connection.model.js'
 
-type ProjectCreateData = {
-    name: string,
-    description?: string | null
-    color?: string | null
-}
+import Project from '../../models/projects/project.model.js'
+import DbConnection from '../../models/dbConnections/dbConnection.model.js'
 
-type ProjectUpdateData = {
-    name?: string,
-    description?: string | null
-    color?: string | null
-}
+import * as helpFunctions from '../../lib/utils/functions.js'
+import { Op } from 'sequelize'
 
-type ProjectOverview = {
-    message: string,
-    project: Project,
-    dbConnection: {
-        connected: string
-        dbType: SupportedDbType | null
-        latencyMs: number | null
-    }
-    schema: DbSchemaSnapshot,
-    executors: Executor[] | null
-    chat: {
-        id: number
-    }
-}
-
-type ProjectListOptions = {
-    page?: number
-    limit?: number
-    search?: string
-    order?: string
-}
-
-type ProjectListResult = {
-    projects: Project[]
-    page: number
-    limit: number
-    total: number
-    totalPages: number
-}
+import { 
+    ProjectCreateData, 
+    ProjectListOptions, 
+    ProjectListResult, 
+    ProjectOverview, 
+    ProjectUpdateData 
+} from '../../types/projects/project.type.js'
+import { DbSchemaSnapshot } from '../../types/dbConnections/dbConnection.type.js'
 
 export default class ProjectService {
     private dbConnectionService: DbConnectionService

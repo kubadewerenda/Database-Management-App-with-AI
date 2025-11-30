@@ -1,28 +1,25 @@
-import crypto from 'crypto'
-import { BadRequestException, NotFoundException } from '../../lib/errors.js'
-import DbConnection from '../../models/projects/connection.model.js'
-import SchemaCache from '../../models/projects/schemaCache.model.js'
+import { 
+    BadRequestException, 
+    NotFoundException 
+} from '../../lib/errors.js'
+
+import DbConnection from '../../models/dbConnections/dbConnection.model.js'
+import DbSchema from '../../models/dbConnections/dbSchema.model.js'
 
 import { Client } from 'pg'
 import mysql from 'mysql2/promise'
-
-import type { DbSchemaSnapshot, DbColumnSchema, DbTableSchema } from '../../types/schemaCache/schemaCache.js'
+import crypto from 'crypto'
 import * as helpFunctions from '../../lib/utils/functions.js'
-import { SupportedDbType } from '../../types/dbConnection/dbConnection.type.js'
+
+import { 
+    DbColumnSchema, 
+    DbSchemaSnapshot, 
+    DbTableSchema, 
+    ParsedConnectionString, 
+    SupportedDbType, 
+    UpsertConnectionData 
+} from '../../types/dbConnections/dbConnection.type.js'
 import { DbType } from '../../enums/dbConnection/dbConnection.enum.js'
-
-type UpsertConnectionData = {
-    connectionString: string
-    dbType: SupportedDbType
-}
-
-type ParsedConnectionString = {
-    host: string
-    port: number
-    database: string
-    username: string
-    password: string
-}
 
 export default class DbConnectionService {
     private _ensureSecretKey(): Buffer {
@@ -367,8 +364,8 @@ export default class DbConnectionService {
         throw new BadRequestException('Unsupported database type.')
     }
 
-    private async _upsertSchemaCache(connectionId: number, snapshot: DbSchemaSnapshot) {
-        const existing = await SchemaCache.findOne({
+    private async _upsertDbSchema(connectionId: number, snapshot: DbSchemaSnapshot) {
+        const existing = await DbSchema.findOne({
             where: { connectionId },
         })
 
@@ -381,7 +378,7 @@ export default class DbConnectionService {
         if(existing) {
             await existing.update(payload as any)
         } else {
-            await SchemaCache.create(payload as any)
+            await DbSchema.create(payload as any)
         }
     }
 
@@ -460,7 +457,7 @@ export default class DbConnectionService {
         }
 
         const snapshot = await this._loadSchemaSnapshot(connectionString, dbType)
-        await this._upsertSchemaCache(dbConn.id, snapshot)
+        await this._upsertDbSchema(dbConn.id, snapshot)
 
         if(!project.isActive) {
             project.isActive = true
@@ -478,7 +475,7 @@ export default class DbConnectionService {
     ): Promise<DbSchemaSnapshot> {
         const dbConn = await this.getDbModel(projectId, userId)
 
-        const schema = await SchemaCache.findOne({
+        const schema = await DbSchema.findOne({
             where: { connectionId: dbConn.id },
         })
 
@@ -497,7 +494,7 @@ export default class DbConnectionService {
         const connectionString = this.buildConnectionStringFromModel(dbConn)
 
         const snapshot = await this._loadSchemaSnapshot(connectionString, dbType)
-        await this._upsertSchemaCache(dbConn.id, snapshot)
+        await this._upsertDbSchema(dbConn.id, snapshot)
     }
 
     public async testSavedConnection(projectId: number, userId: number) {

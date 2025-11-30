@@ -11,8 +11,8 @@ import {
     Index
 } from 'sequelize-typescript'
 import Project from '../projects/project.model.js'
-import DbConnection from '../projects/connection.model.js'
-import Executor from '../executors/executor.model.js'
+import DbConnection from '../dbConnections/dbConnection.model.js'
+import Executor from './executor.model.js'
 
 @Table({
     tableName: 'executions',
@@ -41,7 +41,7 @@ export default class Execution extends Model<Execution> {
     connectionId!: number
 
     @ForeignKey(() => Executor)
-    @AllowNull(true)          // TODO: tutaj zmienic zeby nie moglo byc null na final
+    @AllowNull(false)          
     @Index
     @Column({ field: 'executor_id', type: DataType.BIGINT })
     executorId!: number | null
