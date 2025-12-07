@@ -4,20 +4,34 @@ import { FaBackward } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import { MdAutorenew } from "react-icons/md";
 import { RiDownloadFill } from "react-icons/ri";
+import { sendMessage } from "../../api/projectDetailsApi";
 
 type chatMessages = {
   id: number;
   role: string;
   content: string;
-  sqlDraft: null;
+  sqlDraft: string;
   createdAt: string;
 };
 
 const Chat = ({ id }: { id: number }) => {
   const [chatMessages, setChatMessages] = useState<chatMessages[]>([]);
+
   const [userMessage, setUserMessage] = useState("");
 
   const navigate = useNavigate();
+
+  const sendMessageToAi = async () => {
+    const response = await sendMessage(id, userMessage);
+    console.log(response);
+    setUserMessage("");
+    const fetchChatHistory = async () => {
+      const response = await chatHistory(id);
+      console.log(response.messages);
+      setChatMessages(response.messages);
+    };
+    fetchChatHistory();
+  };
 
   useEffect(() => {
     const fetchChatHistory = async () => {
@@ -71,6 +85,7 @@ const Chat = ({ id }: { id: number }) => {
           placeholder="Zapytaj AI"
           className="w-3/4 mx outline-none border border-neutral-300/40 bg-neutral-800/80 rounded-2xl px-3 py-2 font-semibold focus:ring-2 focus:ring-neutral-500/40 transition text-neutral-300"
         />
+        <button onClick={sendMessageToAi}>WYSLIJ</button>
       </div>
     </div>
   );

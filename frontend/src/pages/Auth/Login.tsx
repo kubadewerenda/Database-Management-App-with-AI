@@ -66,6 +66,9 @@ const Register = () => {
               Zarejestruj się
             </Link>
           </div>
+          <button>
+            <a href="http://localhost:8000/user/login/google">Google</a>
+          </button>
         </form>
       </div>
     </main>

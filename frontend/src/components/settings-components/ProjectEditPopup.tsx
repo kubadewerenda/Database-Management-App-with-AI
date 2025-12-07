@@ -15,12 +15,14 @@ type ProjectEditPopupProps = {
   modalProject: ProjectType;
   setIsEditPopupOpen: (isOpen: boolean) => void;
   onProjectDeleted?: () => void;
+  onProjectUpdated?: () => void;
 };
 
 const ProjectEditPopup = ({
   modalProject,
   setIsEditPopupOpen,
   onProjectDeleted,
+  onProjectUpdated,
 }: ProjectEditPopupProps) => {
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
@@ -36,8 +38,13 @@ const ProjectEditPopup = ({
   };
 
   const handleUpdateProjectData = async () => {
-    await updateProjectData(modalProject.id, newName, newDesc);
-    setIsEditPopupOpen(false);
+    try {
+      await updateProjectData(modalProject.id, newName, newDesc);
+      onProjectUpdated?.();
+      setIsEditPopupOpen(false);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
