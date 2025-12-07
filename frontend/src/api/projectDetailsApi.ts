@@ -85,3 +85,26 @@ export const chatHistory = async (id: number) => {
     console.error(error);
   }
 };
+
+//WYSYLANIE WIADOMOSCI DO AI
+export const sendMessage = async (id: number, userMessage: string) => {
+  try {
+    const response = await fetch(`${API_URL}/project/${id}/chat/message`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: userMessage,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      return data;
+    }
+    return data;
+  } catch (e) {
+    console.error(e);
+  }
+};

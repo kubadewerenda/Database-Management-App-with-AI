@@ -55,5 +55,8 @@ export const updateProjectData = async (
     console.log(data);
   } catch (error) {
     console.error(error);
+    throw error instanceof Error
+      ? error
+      : new Error("Failed to update project data");
   }
 };

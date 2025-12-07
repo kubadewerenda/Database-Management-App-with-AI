@@ -284,6 +284,7 @@ const ProjectList = () => {
           modalProject={modalProject}
           setIsEditPopupOpen={setIsEditPopupOpen}
           onProjectDeleted={triggerProjectsRefresh}
+          onProjectUpdated={triggerProjectsRefresh}
         />
       )}
     </div>
