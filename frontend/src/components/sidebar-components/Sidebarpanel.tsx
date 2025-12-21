@@ -10,6 +10,7 @@ type SidebarPanelProps = {
   setIsSideBarOpen: (value: boolean) => void;
   activeView: string;
   onProjectCreated?: () => void;
+  projectId?: number;
 };
 
 const SidebarPanel = ({
@@ -17,13 +18,14 @@ const SidebarPanel = ({
   setIsSideBarOpen,
   activeView,
   onProjectCreated,
+  projectId,
 }: SidebarPanelProps) => {
   if (!isSideBarOpen) return null;
 
   const views: Record<string, ReactNode> = {
     projects: <Projects onProjectCreated={onProjectCreated} />,
     settings: <Settings />,
-    queries: <SavedQueries />,
+    queries: <SavedQueries projectId={projectId} />,
   };
 
   const panelContent = views[activeView] ?? views.projects;

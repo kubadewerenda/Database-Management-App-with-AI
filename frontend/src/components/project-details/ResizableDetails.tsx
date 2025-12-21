@@ -7,6 +7,7 @@ import { BsSearch } from "react-icons/bs";
 import { HiOutlineEye } from "react-icons/hi2";
 import { HiOutlineEyeSlash } from "react-icons/hi2";
 import { PuffLoader } from "react-spinners";
+import Executors from "./Executors";
 
 type DbSchema = {
   name: string;
@@ -32,6 +33,8 @@ const ResizableDetails = ({
 }) => {
   const [database, setDatabase] = useState<DbSchema[]>([]);
 
+  const [chatId, setChatId] = useState<number | null>(null);
+
   const [showTablesDetails, setShowTablesDetails] = useState(true);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -42,8 +45,10 @@ const ResizableDetails = ({
       try {
         setIsLoading(true);
         const response = await projectOverview(id);
-        setDatabase(response.projectOverview.schema.tables);
-        console.log(response.projectOverview.schema.tables);
+        const tables = response?.projectOverview?.schema?.tables ?? [];
+        setDatabase(tables);
+        setChatId(response?.projectOverview?.chat?.id ?? null);
+        console.log(tables);
       } catch (e) {
         console.error("Błąd pobierania schematu", e);
       } finally {
@@ -161,6 +166,7 @@ const ResizableDetails = ({
             </div>
           )}
         </div>
+        <Executors />
       </Panel>
 
       <PanelResizeHandle className="w-1 bg-transparent hover:bg-neutral-500/50 rounded-full mx-1 hover:w-1.5 transition-all" />
@@ -170,7 +176,7 @@ const ResizableDetails = ({
         minSize={30}
         className=" h-full flex flex-col relative"
       >
-        <Chat id={id} />
+        <Chat projectId={id} chatId={chatId} />
       </Panel>
     </PanelGroup>
   );
