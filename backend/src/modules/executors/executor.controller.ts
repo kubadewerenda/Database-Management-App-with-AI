@@ -82,6 +82,26 @@ class ExecutorController extends Controller {
         })
     }
 
+    private async getExecutor(req: Request, res: Response) {
+        const projectId = projectIdSchema.safeParse(req.params.projectId)
+        if (!projectId.success) throw projectId.error
+
+        const executorId = executorIdSchema.safeParse(req.params.executorId)
+        if (!executorId.success) throw executorId.error
+
+        const userId = req.user!.id
+
+        const executor = await this. executorService.getExecutor(
+            projectId.data,
+            userId,
+            executorId.data
+        )
+
+        return res.status(200).json({
+            executor
+        })
+    }
+
     private async updateExecutor(req: Request, res: Response) {
         const projectId = projectIdSchema.safeParse(req.params.projectId)
         if (!projectId.success) throw projectId.error
@@ -164,6 +184,7 @@ class ExecutorController extends Controller {
     public routes(): void {
         this.router.post('/:projectId/executors/:executorId/execute', userMd.isUserPermitted, asyncHandler(this.executeQuery.bind(this)))
         this.router.post('/:projectId/executors', userMd.isUserPermitted, asyncHandler(this.createExecutor.bind(this)))
+        this.router.get('/:projectId/executor/:executorId', userMd.isUserPermitted, asyncHandler(this.getExecutor.bind(this)))
         this.router.get('/:projectId/executors', userMd.isUserPermitted, asyncHandler(this.getExecutorsList.bind(this)))
         this.router.patch('/:projectId/executors/:executorId', userMd.isUserPermitted, asyncHandler(this.updateExecutor.bind(this)))
         this.router.delete('/:projectId/executors/:executorId', userMd.isUserPermitted, asyncHandler(this.deleteExecutor.bind(this)))
