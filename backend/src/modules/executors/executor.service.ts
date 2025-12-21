@@ -398,6 +398,23 @@ export default class ExecutorService {
         return executors
     }
 
+    public async getExecutor(projectId: number, userId: number, executorId: number) {
+        await helpFunctions._ensureProjectOwned(projectId, userId)
+
+        const executor = await Executor.findOne({
+            where: { id: executorId, projectId }
+        })
+
+        const executionsInExecutor = await Execution.findAll({
+            where: {projectId, executorId}
+        })
+
+        return {
+            executor,
+            history: executionsInExecutor
+        }
+    }
+
     public async renameExecutor(
         projectId: number,
         userId: number,
