@@ -5,9 +5,8 @@ type User = {
   status: string;
 };
 
-type AuthResponse = {
-  user: User;
-  accessToken: string;
+type MessageResponse = {
+  message?: string;
 };
 
 const API_URL = "http://localhost:8000";
@@ -24,32 +23,39 @@ export const logoutUser = async (): Promise<void> => {
 };
 
 export const registerUser = async (
+  username: string,
   email: string,
   password: string,
   passwordCheck: string
-): Promise<User> => {
+): Promise<{ message: string }> => {
   const response = await fetch(`${API_URL}/user/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ email, password, passwordCheck }),
+    body: JSON.stringify({ username, email, password, passwordCheck }),
   });
 
   console.log("Response status:", response.status);
 
+  const data = await response.json().catch(() => ({}));
+
   if (!response.ok) {
-    throw new Error("registration error");
+    const message =
+      (data as { message?: string })?.message ?? "registration error";
+    throw new Error(message);
   }
 
-  const data: AuthResponse = await response.json();
   console.log("RESPONSE = ", data);
-  return data.user;
+  return {
+    message:
+      (data as { message?: string }).message ?? "User registered successfully.",
+  };
 };
 
 export const loginUser = async (
   email: string,
   password: string
-): Promise<User> => {
+): Promise<{ message: string }> => {
   const response = await fetch(`${API_URL}/user/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -60,13 +66,15 @@ export const loginUser = async (
   console.log("Login response status", response.status);
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error("Błąd logowania", errorData);
+    const errorData = (await response.json().catch(() => ({}))) as {
+      message?: string;
+    };
+    throw new Error(errorData.message ?? "Błąd logowania");
   }
 
-  const data: AuthResponse = await response.json();
+  const data = (await response.json().catch(() => ({}))) as MessageResponse;
   console.log("Login response", data);
-  return data.user;
+  return { message: data.message ?? "User logged successfully." };
 };
 
 export const getCurrentUser = async (): Promise<User | null> => {

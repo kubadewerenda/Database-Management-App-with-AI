@@ -16,12 +16,13 @@ type User = {
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<string>;
   register: (
+    username: string,
     email: string,
     password: string,
     passwordCheck: string
-  ) => Promise<void>;
+  ) => Promise<string>;
   logout: () => Promise<void>;
 };
 
@@ -59,9 +60,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const user = await loginUser(email, password);
-      //   console.log("Login - user z API", user);
-      setUser(user);
+      const { message } = await loginUser(email, password);
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+      if (!currentUser) {
+        throw new Error("Nie udało się pobrać danych użytkownika.");
+      }
+      return message;
     } catch (error) {
       console.error("Blad w login()", error);
       throw error;
@@ -71,16 +76,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (
+    username: string,
     email: string,
     password: string,
     passwordCheck: string
   ) => {
     setIsLoading(true);
     try {
-      const user = await registerUser(email, password, passwordCheck);
-      setUser(user);
+      const { message } = await registerUser(
+        username,
+        email,
+        password,
+        passwordCheck
+      );
+      setUser(null);
+      return message;
     } catch (error) {
       console.error(error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("registration error");
     } finally {
       setIsLoading(false);
     }

@@ -6,6 +6,7 @@ type SidebarProps = {
   setIsSideBarOpen: (value: boolean) => void;
   activeView: string;
   setActiveView: (view: string) => void;
+  projectId?: number;
 };
 
 const Sidebar = ({
@@ -13,6 +14,7 @@ const Sidebar = ({
   setIsSideBarOpen,
   activeView,
   setActiveView,
+  projectId,
 }: SidebarProps) => {
   return (
     <>
@@ -27,6 +29,7 @@ const Sidebar = ({
         isSideBarOpen={isSideBarOpen}
         setIsSideBarOpen={setIsSideBarOpen}
         activeView={activeView}
+        projectId={projectId}
       />
     </>
   );

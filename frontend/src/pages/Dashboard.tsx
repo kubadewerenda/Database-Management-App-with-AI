@@ -2,12 +2,18 @@ import { useState } from "react";
 import Navbar from "../components/Navbar";
 import SidebarIcons from "../components/sidebar-components/SidebarIcons";
 import SidebarPanel from "../components/sidebar-components/Sidebarpanel";
-import { Outlet } from "react-router-dom";
+import { Outlet, useParams } from "react-router-dom";
 
 const Dashboard = () => {
   const [isSideBarOpen, setIsSideBarOpen] = useState(true);
   const [activeView, setActiveView] = useState("projects");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const { projectId: projectIdParam } = useParams();
+  const parsedProjectId = projectIdParam ? Number(projectIdParam) : NaN;
+  const projectIdNumber = Number.isFinite(parsedProjectId)
+    ? parsedProjectId
+    : undefined;
 
   const triggerProjectsRefresh = () => setRefreshTrigger((prev) => prev + 1);
 
@@ -27,6 +33,7 @@ const Dashboard = () => {
           isSideBarOpen={isSideBarOpen}
           setIsSideBarOpen={setIsSideBarOpen}
           activeView={activeView}
+          projectId={projectIdNumber}
           onProjectCreated={triggerProjectsRefresh}
         />
 

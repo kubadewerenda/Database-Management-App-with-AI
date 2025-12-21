@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { FaBackward } from "react-icons/fa6";
 import { fetchProject } from "../../api/projectDetailsApi";
 import { PuffLoader } from "react-spinners";
+import { SiPostgresql } from "react-icons/si";
+import { SiMysql } from "react-icons/si";
+import { TbBrandMongodb } from "react-icons/tb";
 
 const DbConnection = ({
   setIsConnected,
@@ -15,6 +18,7 @@ const DbConnection = ({
   const [message, setMessage] = useState("");
   const [projectName, setProjectName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [dbType, setDbType] = useState("");
 
   const { projectId } = useParams();
   const id = Number(projectId);
@@ -37,7 +41,7 @@ const DbConnection = ({
     }
     setIsLoading(true);
     try {
-      const response = await sendConnectionString(id, connectionString);
+      const response = await sendConnectionString(id, connectionString, dbType);
 
       if (response.message === "Invalid connection string.") {
         setMessage("Błedny connection string");
@@ -67,7 +71,36 @@ const DbConnection = ({
           Wróć do listy
         </button>
       </div>
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 w-full max-w-4xl mx-auto">
+      <div className="flex-1 flex flex-col items-center justify-center gap-12 w-full max-w-4xl mx-auto">
+        <div className="flex flex-col gap-6 self-start">
+          <p className="text-2xl text-neutral-300">Baza danych</p>
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => setDbType("postgres")}
+              className={`border p-4 rounded-xl border-neutral-500 hover:bg-neutral-600 hover:cursor-pointer transition ${
+                dbType === "postgres" ? "bg-neutral-600" : ""
+              }`}
+            >
+              <SiPostgresql size={40} />
+            </button>
+            <button
+              onClick={() => setDbType("mysql")}
+              className={`border p-4 rounded-xl border-neutral-500 hover:bg-neutral-600 hover:cursor-pointer transition ${
+                dbType === "mysql" ? "bg-neutral-600" : ""
+              }`}
+            >
+              <SiMysql size={40} />
+            </button>
+            <button
+              onClick={() => setDbType("mongodb")}
+              className={`border p-4 rounded-xl border-neutral-500 hover:bg-neutral-600 hover:cursor-pointer transition ${
+                dbType === "mongodb" ? "bg-neutral-600" : ""
+              }`}
+            >
+              <TbBrandMongodb size={40} />
+            </button>
+          </div>
+        </div>
         <div className="flex flex-col gap-3 w-full">
           <label
             htmlFor="connection-string"
