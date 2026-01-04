@@ -18,7 +18,7 @@ export class Orm {
     static async init(opts?: { sync?: boolean, logSql?: boolean }) {
         if(this._sequelize) return
 
-        const DB_URL = process.env.SUPABASE_DB_URL
+        const DB_URL = process.env.DATABASE_DB_URL
         if(!DB_URL) throw new Error('Missing DB URL')
 
         const isProd = process.env.NODE_ENV === 'production'
