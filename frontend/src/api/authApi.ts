@@ -1,6 +1,7 @@
 type User = {
   id: number;
   email: string;
+  username?: string;
   role: string;
   status: string;
 };
@@ -35,8 +36,6 @@ export const registerUser = async (
     body: JSON.stringify({ username, email, password, passwordCheck }),
   });
 
-  console.log("Response status:", response.status);
-
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
@@ -45,7 +44,6 @@ export const registerUser = async (
     throw new Error(message);
   }
 
-  console.log("RESPONSE = ", data);
   return {
     message:
       (data as { message?: string }).message ?? "User registered successfully.",
@@ -63,8 +61,6 @@ export const loginUser = async (
     body: JSON.stringify({ email, password }),
   });
 
-  console.log("Login response status", response.status);
-
   if (!response.ok) {
     const errorData = (await response.json().catch(() => ({}))) as {
       message?: string;
@@ -73,8 +69,50 @@ export const loginUser = async (
   }
 
   const data = (await response.json().catch(() => ({}))) as MessageResponse;
-  console.log("Login response", data);
   return { message: data.message ?? "User logged successfully." };
+};
+
+export const updateUser = async (userData: {
+  username?: string;
+  email?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}): Promise<{ message: string; user: User }> => {
+  const response = await fetch(`${API_URL}/user/me/update`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(userData),
+  });
+
+  if (!response.ok) {
+    const errorData = (await response.json().catch(() => ({}))) as {
+      message?: string;
+    };
+    throw new Error(errorData.message ?? "Failed to update user");
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+export const verifyEmail = async (
+  token: string
+): Promise<{ message: string }> => {
+  const response = await fetch(`${API_URL}/user/verify-email?token=${token}`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const errorData = (await response.json().catch(() => ({}))) as {
+      message?: string;
+    };
+    throw new Error(errorData.message ?? "Failed to verify email");
+  }
+
+  const data = await response.json();
+  return { message: data.message ?? "Email verified successfully." };
 };
 
 export const getCurrentUser = async (): Promise<User | null> => {
@@ -89,10 +127,8 @@ export const getCurrentUser = async (): Promise<User | null> => {
     }
 
     const data = await response.json();
-    console.log("getCurrentUser respose", data);
     return data.user;
-  } catch (error) {
-    console.error("getCurrentUser", error);
+  } catch {
     return null;
   }
 };

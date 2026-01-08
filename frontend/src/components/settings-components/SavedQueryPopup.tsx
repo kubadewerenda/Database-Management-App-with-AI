@@ -156,7 +156,6 @@ const SavedQueryPopup = ({
               id="query-tags"
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
-              placeholder="np. performance, raport, billing"
               className="outline-none border border-neutral-500/40 bg-neutral-800/80 rounded-2xl px-3 py-2 font-semibold focus:border-neutral-400/60 focus:ring-2 focus:ring-neutral-500/40 transition"
             />
           </div>

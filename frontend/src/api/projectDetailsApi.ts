@@ -186,7 +186,7 @@ export const renameTerminal = async (
   return data;
 };
 
-//USUWANIE TERMINALA
+//UUSWANIE TERMINALA
 export const deleteTerminal = async (projectId: number, executorId: number) => {
   const response = await fetch(
     `${API_URL}/project/${projectId}/executors/${executorId}`,
@@ -202,6 +202,49 @@ export const deleteTerminal = async (projectId: number, executorId: number) => {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error((data as { message?: string })?.message ?? "delete failed");
+  }
+  return data;
+};
+
+export const fetchExecutor = async (projectId: number, executorId: number) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/project/${projectId}/executor/${executorId}`,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const executeSql = async (
+  projectId: number,
+  executorId: number,
+  sql: string
+) => {
+  const response = await fetch(
+    `${API_URL}/project/${projectId}/executors/${executorId}/execute`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ sql }),
+    }
+  );
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data?.message || "Execution failed");
   }
   return data;
 };

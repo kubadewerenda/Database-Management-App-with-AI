@@ -7,7 +7,6 @@ import { fetchProject } from "../../api/projectDetailsApi";
 import { PuffLoader } from "react-spinners";
 import { SiPostgresql } from "react-icons/si";
 import { SiMysql } from "react-icons/si";
-import { TbBrandMongodb } from "react-icons/tb";
 
 const DbConnection = ({
   setIsConnected,
@@ -28,7 +27,6 @@ const DbConnection = ({
   useEffect(() => {
     const getData = async () => {
       const response = await fetchProject(id);
-      console.log(response.project.name);
       setProjectName(response.project.name);
     };
     getData();
@@ -50,8 +48,8 @@ const DbConnection = ({
         setMessage("Połączono");
         setIsConnected(true);
       }
-    } catch (e) {
-      console.log(e);
+    } catch {
+      // Silent fail
     } finally {
       setIsLoading(false);
     }
@@ -90,14 +88,6 @@ const DbConnection = ({
               }`}
             >
               <SiMysql size={40} />
-            </button>
-            <button
-              onClick={() => setDbType("mongodb")}
-              className={`border p-4 rounded-xl border-neutral-500 hover:bg-neutral-600 hover:cursor-pointer transition ${
-                dbType === "mongodb" ? "bg-neutral-600" : ""
-              }`}
-            >
-              <TbBrandMongodb size={40} />
             </button>
           </div>
         </div>
