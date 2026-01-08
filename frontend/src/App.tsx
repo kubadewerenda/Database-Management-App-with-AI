@@ -1,8 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import Register from "./pages/Auth/Register";
 import Login from "./pages/Auth/Login";
+import Register from "./pages/Auth/Register";
+import VerifyEmail from "./pages/Auth/VerifyEmail";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import ProjectList from "./pages/ProjectList";
@@ -15,6 +16,7 @@ const App = () => {
         <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         <Route
           path="/dashboard"

@@ -1,130 +1,118 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   fetchTerminals,
   createTerminal,
-  renameTerminal,
-  deleteTerminal,
+  fetchExecutor,
+  executeSql,
 } from "../../api/projectDetailsApi";
 import { useParams } from "react-router-dom";
-import { IoChevronDown, IoChevronUp } from "react-icons/io5";
-import TerminalTooltip from "../settings-components/TerminalTooltip";
+import { IoChevronDown, IoChevronUp, IoPlay } from "react-icons/io5";
 
-type ExecutorItem = {
+type HistoryItem = {
   id: number;
-  projectId: number;
-  name: string;
-  isPinned: boolean;
+  sql: string;
   createdAt: string;
-  updatedAt: string;
 };
-
-// Dodajemy 'name', żeby przekazać ją do inputa w tooltipie
-type TooltipData = {
-  id: number;
-  name: string;
-  x: number;
-  y: number;
-} | null;
 
 const Executors = () => {
   const { projectId } = useParams();
   const id = Number(projectId);
 
-  const [executors, setExecutors] = useState<ExecutorItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTerminal, setActiveTerminal] = useState(0);
+  const [terminalId, setTerminalId] = useState<number | null>(null);
 
-  const [tooltipData, setTooltipData] = useState<TooltipData>(null);
-  const closeTimeoutRef = useRef<number | null>(null);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [sql, setSql] = useState("");
+  const [result, setResult] = useState(null);
+
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
   useEffect(() => {
-    const loadExecutors = async () => {
-      const data = await fetchTerminals(id);
-      setExecutors(data?.executors ?? []);
-    };
-    loadExecutors();
-  }, [id]);
-
-  const onCreateTerminal = async () => {
-    try {
-      await createTerminal(id);
-      const data = await fetchTerminals(id);
-      setExecutors(data?.executors ?? []);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  // --- OBSŁUGA MYSZKI ---
-
-  const handleMouseEnter = (
-    e: React.MouseEvent<HTMLDivElement>,
-    termId: number,
-    termName: string
-  ) => {
-    // Jeśli wjeżdżamy na element, anulujemy zamykanie
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    setTooltipData({
-      id: termId,
-      name: termName,
-      x: rect.left + rect.width / 2,
-      y: rect.top,
-    });
-  };
-
-  const handleMouseLeave = () => {
-    // Opóźnienie, żeby zdążyć najechać na tooltip
-    closeTimeoutRef.current = setTimeout(() => {
-      setTooltipData(null);
-    }, 300) as unknown as number;
-  };
-
-  const handleTooltipEnter = () => {
-    // Jeśli jesteśmy nad tooltipem, nie zamykaj go
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
-  };
-
-  // --- LOGIKA BIZNESOWA (PROSTA) ---
-
-  const handleRename = async (newName: string) => {
-    if (!tooltipData) return;
-    const trimmed = newName.trim();
-    if (!trimmed) return;
-    try {
-      await renameTerminal(id, tooltipData.id, trimmed);
-      const data = await fetchTerminals(id);
-      setExecutors(data?.executors ?? []);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setTooltipData(null); // Zamykamy dymek po akcji
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!tooltipData) return;
-    try {
-      await deleteTerminal(id, tooltipData.id);
-      const data = await fetchTerminals(id);
-      const list = data?.executors ?? [];
-      setExecutors(list);
-
-      // Ustaw aktywny na pierwszy z listy, jeśli usunięty był aktywny
-      if (activeTerminal === tooltipData.id) {
-        setActiveTerminal(list[0]?.id ?? 0);
+    const initTerminal = async () => {
+      try {
+        const data = await fetchTerminals(id);
+        const list = data?.executors ?? [];
+        if (list.length > 0) {
+          setTerminalId(list[0].id);
+        } else {
+          try {
+            const newTerm = await createTerminal(id);
+            if (newTerm?.executor?.id) {
+              setTerminalId(newTerm.executor.id);
+            } else {
+              const refreshed = await fetchTerminals(id);
+              if (refreshed?.executors?.length > 0) {
+                setTerminalId(refreshed.executors[0].id);
+              }
+            }
+          } catch {
+            const refreshed = await fetchTerminals(id);
+            if (refreshed?.executors?.length > 0) {
+              setTerminalId(refreshed.executors[0].id);
+            }
+          }
+        }
+      } catch (e) {
+        console.error(e);
       }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setTooltipData(null); // Zamykamy dymek po akcji
+    };
+    if (isOpen) {
+      initTerminal();
+    }
+  }, [id, isOpen]);
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      if (!terminalId) return;
+      const data = await fetchExecutor(id, terminalId);
+      if (data?.executor?.history) {
+        setHistory(data.executor.history);
+        setHistoryIndex(data.executor.history.length);
+      }
+    };
+    loadHistory();
+  }, [id, terminalId]);
+
+  const onExecute = async () => {
+    if (!sql.trim() || !terminalId) return;
+    try {
+      const res = await executeSql(id, terminalId, sql);
+      setResult(res);
+      const data = await fetchExecutor(id, terminalId);
+      if (data?.executor?.history) {
+        setHistory(data.executor.history);
+        setHistoryIndex(data.executor.history.length);
+      }
+      setSql("");
+    } catch {
+      setResult(null);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && e.ctrlKey) {
+      onExecute();
+      return;
+    }
+
+    if (history.length === 0) return;
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const newIndex = Math.max(0, historyIndex - 1);
+      setHistoryIndex(newIndex);
+      if (history[newIndex]) {
+        setSql(history[newIndex].sql);
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const newIndex = Math.min(history.length, historyIndex + 1);
+      setHistoryIndex(newIndex);
+      if (newIndex === history.length) {
+        setSql("");
+      } else if (history[newIndex]) {
+        setSql(history[newIndex].sql);
+      }
     }
   };
 
@@ -143,61 +131,47 @@ const Executors = () => {
         )}
       </button>
 
-      {isOpen && (
-        <div className="h-96 overflow-y-auto border-t border-neutral-700/60 p-3 bg-neutral-950/40">
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 flex-nowrap scrollbar-thin scrollbar-thumb-neutral-700">
-            {executors.map((element) => {
-              const isActive = activeTerminal === element.id;
-
-              return (
-                <div
-                  key={element.id}
-                  // WAŻNE: Przekazujemy tutaj też nazwę (element.name)
-                  onMouseEnter={(e) =>
-                    handleMouseEnter(e, element.id, element.name)
-                  }
-                  onMouseLeave={handleMouseLeave}
-                  onClick={() => setActiveTerminal(element.id)}
-                  className={`relative px-3 py-1.5 cursor-pointer whitespace-nowrap transition border-b-2 ${
-                    isActive
-                      ? "border-orange-400 bg-neutral-800 rounded-t-lg"
-                      : "border-transparent text-neutral-400 hover:text-neutral-200 hover:border-orange-300/30"
-                  }`}
-                >
-                  <span
-                    className={`text-xs font-semibold ${
-                      isActive ? "text-orange-100" : ""
-                    }`}
-                  >
-                    {element.name}
-                  </span>
+      {isOpen && terminalId && (
+        <div className="h-96 overflow-y-auto border-t border-neutral-700/60 p-3 bg-neutral-950/40 flex flex-col gap-4">
+          <div className="flex-1 overflow-y-auto bg-neutral-900/50 rounded p-2 text-xs font-mono space-y-1 scrollbar-thin scrollbar-thumb-neutral-700">
+            {result ? (
+              <div className="text-xs">
+                <div className="mb-2 font-semibold text-green-400">
+                  Execution Result:
                 </div>
-              );
-            })}
+                <div className="overflow-x-auto">
+                  <pre className="whitespace-pre text-neutral-300">
+                    {JSON.stringify(result, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            ) : (
+              <div className="text-neutral-500 italic text-center mt-10">
+                Run a query to see results...
+              </div>
+            )}
+          </div>
 
+          <div className="flex gap-2 shrink-0">
+            <textarea
+              value={sql}
+              onChange={(e) => setSql(e.target.value)}
+              className="w-full bg-neutral-900 border border-neutral-700 rounded p-2 text-xs font-mono text-neutral-200 focus:outline-none focus:border-orange-500/50 resize-none h-20"
+              placeholder="SELECT * FROM... (Up/Down for history)"
+              onKeyDown={handleKeyDown}
+            />
             <button
-              onClick={onCreateTerminal}
-              className="px-2 py-1 rounded-md font-bold text-sm border border-orange-500/70 bg-orange-500/15 text-orange-100 hover:bg-orange-500/25 hover:border-orange-400 transition shrink-0"
+              type="button"
+              onClick={onExecute}
+              className="px-3 bg-orange-600/20 border border-orange-500/40 text-orange-200 rounded hover:bg-orange-600/30 transition flex items-center justify-center"
+              title="Run SQL (Ctrl+Enter)"
             >
-              +
+              <IoPlay size={16} />
             </button>
           </div>
         </div>
       )}
-
-      {tooltipData && (
-        <TerminalTooltip
-          x={tooltipData.x}
-          y={tooltipData.y}
-          initialName={tooltipData.name}
-          onMouseEnter={handleTooltipEnter}
-          onMouseLeave={handleMouseLeave}
-          onRename={handleRename}
-          onDelete={handleDelete}
-        />
-      )}
     </div>
   );
 };
-
 export default Executors;

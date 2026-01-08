@@ -38,27 +38,6 @@ const SavedQueries = ({ projectId }: SavedQueriesProps) => {
         });
         const rows = (data as { sQueries?: SavedQueryItem[] })?.sQueries ?? [];
         setQueries(rows);
-
-        // Build tags from queries as fallback so dropdown is always populated.
-        const derivedTags = rows
-          .flatMap((q) => q.tags ?? [])
-          .map((t) => (typeof t === "string" ? { id: 0, name: t } : t))
-          .filter((t): t is { id: number; name: string } =>
-            Boolean(t && typeof t.name === "string")
-          );
-
-        if (derivedTags.length) {
-          const deduped = Array.from(
-            new Map(derivedTags.map((t) => [t.name, t])).values()
-          );
-          setTags((prev) => {
-            const merged = [...prev, ...deduped];
-            const dedup = Array.from(
-              new Map(merged.map((t) => [t.name, t])).values()
-            );
-            return dedup;
-          });
-        }
       } catch (err) {
         const message =
           err instanceof Error
@@ -85,20 +64,21 @@ const SavedQueries = ({ projectId }: SavedQueriesProps) => {
           ? data
           : (data as { tags?: { id: number; name: string }[] })?.tags ??
             Object.values(data as Record<string, unknown>).filter(
-              (item) =>
-                item && typeof item === "object" && "name" in (item as any)
+              (item): item is { id: number; name: string } =>
+                item !== null && typeof item === "object" && "name" in item
             );
 
-        const normalized = (maybeArray as any[]).filter(
-          (t) => t && typeof t === "object" && "name" in t
-        ) as { id: number; name: string }[];
+        const normalized = (Array.isArray(maybeArray) ? maybeArray : []).filter(
+          (t): t is { id: number; name: string } =>
+            t && typeof t === "object" && "name" in t
+        );
 
         const deduped = Array.from(
           new Map(normalized.map((t) => [t.name, t])).values()
         );
 
         setTags(deduped ?? []);
-      } catch (err) {
+      } catch {
         // keep silent; tags are optional for rendering
       }
     };
@@ -173,17 +153,18 @@ const SavedQueries = ({ projectId }: SavedQueriesProps) => {
             </div>
             {query.tags && (
               <div className="mt-2 flex flex-wrap gap-2">
-                {(query.tags as any[]).map((tag, idx) => {
-                  const label = typeof tag === "string" ? tag : tag?.name;
-                  return (
-                    <span
-                      key={idx}
-                      className="rounded-full border border-neutral-600 px-2 py-1 text-[11px] text-neutral-300 bg-neutral-700/60"
-                    >
-                      {label}
-                    </span>
-                  );
-                })}
+                {Array.isArray(query.tags) &&
+                  query.tags.map((tag, idx) => {
+                    const label = typeof tag === "string" ? tag : tag?.name;
+                    return (
+                      <span
+                        key={idx}
+                        className="rounded-full border border-neutral-600 px-2 py-1 text-[11px] text-neutral-300 bg-neutral-700/60"
+                      >
+                        {label}
+                      </span>
+                    );
+                  })}
               </div>
             )}
             {query.sql && (

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 
-const Register = () => {
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -66,13 +66,16 @@ const Register = () => {
               Zarejestruj się
             </Link>
           </div>
-          <button>
-            <a href="http://localhost:8000/user/login/google">Google</a>
-          </button>
+          <a
+            href="http://localhost:8000/user/login/google"
+            className="flex items-center justify-center w-full py-2 bg-neutral-700 hover:bg-neutral-600 rounded-3xl text-white text-sm font-semibold transition"
+          >
+            Google
+          </a>
         </form>
       </div>
     </main>
   );
 };
 
-export default Register;
+export default Login;

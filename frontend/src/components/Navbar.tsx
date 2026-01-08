@@ -22,7 +22,7 @@ const Navbar = () => {
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-2">
             <FaUser size={17} className="text-neutral-500" />
-            <p className="text-neutral-300 font-semibold">Marek</p>
+            <p className="text-neutral-300 font-semibold">{user?.username}</p>
           </div>
           <div className="w-[0.5px] h-7 bg-neutral-600"></div>
           <p className="text-sm font-thin text-neutral-400">{user?.email}</p>

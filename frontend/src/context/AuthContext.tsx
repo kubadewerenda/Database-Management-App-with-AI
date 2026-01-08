@@ -9,12 +9,14 @@ import {
 type User = {
   id: number;
   email: string;
+  username?: string;
   role: string;
   status: string;
 };
 
 type AuthContextType = {
   user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<string>;
   register: (
@@ -45,8 +47,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setUser(null);
         }
-      } catch (error) {
-        console.error(error);
+      } catch {
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -68,7 +70,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return message;
     } catch (error) {
-      console.error("Blad w login()", error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -92,7 +93,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       return message;
     } catch (error) {
-      console.error(error);
       if (error instanceof Error) {
         throw error;
       }
@@ -108,7 +108,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await logoutUser();
       setUser(null);
     } catch (error) {
-      console.error("logout error", error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -116,7 +115,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, register }}>
+    <AuthContext.Provider
+      value={{ user, setUser, isLoading, login, logout, register }}
+    >
       {children}
     </AuthContext.Provider>
   );
