@@ -15,7 +15,7 @@ const Projects = ({ onProjectCreated }: ProjectProps) => {
 
   const [isColorPanelOpen, setIsColorPanelOpen] = useState(false);
 
-  const API_URL = "http://localhost:8000";
+  const API_URL = "http://13.37.105.59/";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
