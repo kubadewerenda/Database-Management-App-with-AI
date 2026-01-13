@@ -1,4 +1,4 @@
-const API_URL = "http://13.37.105.59/";
+const API_URL = "http://13.37.105.59";
 
 export const deleteProject = async (projectId: number) => {
   try {
