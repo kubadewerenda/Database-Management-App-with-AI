@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000";
+const API_URL = "http://13.37.105.59/";
 
 export type SavedQueryPayload = {
   name: string;
