@@ -1,4 +1,4 @@
-const API_URL = "http://13.37.105.59/";
+const API_URL = "http://13.37.105.59";
 
 //POJEDYNCZY PROJEKT
 export const fetchProject = async (id: number) => {
