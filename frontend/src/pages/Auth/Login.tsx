@@ -69,7 +69,7 @@ const Login = () => {
           {/* const API_URL = "http://13.37.105.59/"; */}
           {/* http://13.37.105.59 */}
           <a
-            href="http://http://13.37.105.59/user/login/google"
+            href="http://http://13.37.105.59:8000/user/login/google"
             className="flex items-center justify-center w-full py-2 bg-neutral-700 hover:bg-neutral-600 rounded-3xl text-white text-sm font-semibold transition"
           >
             Google

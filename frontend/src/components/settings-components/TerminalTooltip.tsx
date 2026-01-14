@@ -20,11 +20,9 @@ const TerminalTooltip = ({
   onRename,
   onDelete,
 }: TerminalTooltipProps) => {
-  // Tryb edycji: false = ikony, true = input
   const [isEditing, setIsEditing] = useState(false);
   const [val, setVal] = useState(initialName);
 
-  // Jeśli tooltip przeskoczy na inny element, resetujemy stan
   useEffect(() => {
     setVal(initialName);
     setIsEditing(false);
@@ -38,12 +36,11 @@ const TerminalTooltip = ({
       style={{
         left: x,
         top: y,
-        transform: "translate(-50%, -115%)", // Pozycjonowanie nad elementem
+        transform: "translate(-50%, -115%)", 
       }}
     >
       {isEditing ? (
         <>
-          {/* TRYB EDYCJI: Input + Ptaszek */}
           <input
             autoFocus
             className="w-24 bg-neutral-800 text-orange-100 text-xs px-1.5 py-1 rounded border border-neutral-600 focus:border-orange-400 focus:outline-none"
@@ -66,11 +63,10 @@ const TerminalTooltip = ({
         </>
       ) : (
         <>
-          {/* TRYB MENU: Ołówek + Kosz */}
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setIsEditing(true); // Włączamy input
+              setIsEditing(true);
             }}
             className="p-1.5 rounded bg-neutral-800 text-neutral-400 hover:text-orange-300 hover:bg-neutral-700 transition"
           >
@@ -88,7 +84,6 @@ const TerminalTooltip = ({
         </>
       )}
 
-      {/* Dzióbek (trójkąt) na dole */}
       <div className="absolute left-1/2 bottom-[-5px] -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-neutral-700"></div>
     </div>
   );

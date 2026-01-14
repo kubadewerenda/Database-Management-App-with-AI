@@ -19,7 +19,6 @@ const Settings = () => {
     setError("");
 
     try {
-      // Prepare only fields that have values (simple check)
       const payload: any = {};
       if (username && username !== user?.username) payload.username = username;
       if (email && email !== user?.email) payload.email = email;
@@ -35,10 +34,9 @@ const Settings = () => {
 
       const response = await updateUser(payload);
 
-      setUser(response.user); // Update context
+      setUser(response.user); 
       setStatus("Settings updated successfully.");
 
-      // Clear sensitive fields
       setCurrentPassword("");
       setNewPassword("");
     } catch (err: any) {
