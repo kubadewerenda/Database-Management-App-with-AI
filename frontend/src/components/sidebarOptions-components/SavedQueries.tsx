@@ -79,7 +79,7 @@ const SavedQueries = ({ projectId }: SavedQueriesProps) => {
 
         setTags(deduped ?? []);
       } catch {
-        // keep silent; tags are optional for rendering
+        // keep silent; 
       }
     };
 

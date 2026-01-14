@@ -108,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await logoutUser();
       setUser(null);
     } catch (error) {
+      console.error("logout error", error);
       throw error;
     } finally {
       setIsLoading(false);
