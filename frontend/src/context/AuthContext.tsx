@@ -69,8 +69,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Nie udało się pobrać danych użytkownika.");
       }
       return message;
-    } catch (error) {
-      throw error;
     } finally {
       setIsLoading(false);
     }

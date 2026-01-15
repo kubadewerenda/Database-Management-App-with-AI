@@ -1,4 +1,4 @@
-const API_URL = "http://13.37.105.59";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export type SavedQueryPayload = {
   name: string;
@@ -52,7 +52,7 @@ export const listSavedQueries = async (
     throw new Error(message);
   }
   return data as {
-    sQueries?: any[];
+    sQueries?: unknown[];
     hasMore?: boolean;
     nextCursor?: number | null;
   };

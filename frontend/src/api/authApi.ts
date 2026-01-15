@@ -10,7 +10,7 @@ type MessageResponse = {
   message?: string;
 };
 
-const API_URL = "http://13.37.105.59:8000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const logoutUser = async (): Promise<void> => {
   const response = await fetch(`${API_URL}/user/logout`, {
