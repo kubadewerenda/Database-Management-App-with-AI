@@ -16,7 +16,7 @@ const Login = () => {
       await login(email, password);
       navigate("/dashboard");
     } catch (error) {
-      console.error("Error logowanie", error);
+      console.error("Error logowania", error);
     }
   };
 
