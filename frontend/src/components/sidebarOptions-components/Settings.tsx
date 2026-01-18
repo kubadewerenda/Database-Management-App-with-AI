@@ -19,7 +19,12 @@ const Settings = () => {
     setError("");
 
     try {
-      const payload: any = {};
+      const payload: {
+        username?: string;
+        email?: string;
+        currentPassword?: string;
+        newPassword?: string;
+      } = {};
       if (username && username !== user?.username) payload.username = username;
       if (email && email !== user?.email) payload.email = email;
       if (currentPassword && newPassword) {
@@ -34,13 +39,13 @@ const Settings = () => {
 
       const response = await updateUser(payload);
 
-      setUser(response.user); 
+      setUser(response.user);
       setStatus("Settings updated successfully.");
 
       setCurrentPassword("");
       setNewPassword("");
-    } catch (err: any) {
-      setError(err.message || "Update failed.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Update failed.");
       setStatus("");
     }
   };

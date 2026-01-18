@@ -161,7 +161,9 @@ const Register = () => {
             </Link>
           </div>
           <a
-            href="http://http://13.37.105.59:8000/user/login/google"
+            href={`${
+              import.meta.env.VITE_API_URL || "http://localhost:8000"
+            }/user/login/google`}
             className="flex items-center justify-center w-full py-2 bg-neutral-700 hover:bg-neutral-600 rounded-3xl text-white text-sm font-semibold transition mt-2"
           >
             Google
