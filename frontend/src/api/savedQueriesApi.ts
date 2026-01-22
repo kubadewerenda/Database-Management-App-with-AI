@@ -59,13 +59,10 @@ export const listSavedQueries = async (
 };
 
 export const listSavedQueryTags = async (projectId: number) => {
-  const response = await fetch(
-    `${API_URL}/project/${projectId}/query/saved/tags`,
-    {
-      method: "GET",
-      credentials: "include",
-    }
-  );
+  const response = await fetch(`${API_URL}/project/${projectId}/query/tags`, {
+    method: "GET",
+    credentials: "include",
+  });
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {

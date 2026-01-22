@@ -7,6 +7,7 @@ import { fetchProject } from "../../api/projectDetailsApi";
 import { PuffLoader } from "react-spinners";
 import { SiPostgresql } from "react-icons/si";
 import { SiMysql } from "react-icons/si";
+import { SiMariadb } from "react-icons/si";
 
 const DbConnection = ({
   setIsConnected,
@@ -88,6 +89,14 @@ const DbConnection = ({
               }`}
             >
               <SiMysql size={40} />
+            </button>
+            <button
+              onClick={() => setDbType("mysql")}
+              className={`border p-4 rounded-xl border-neutral-500 hover:bg-neutral-600 hover:cursor-pointer transition ${
+                dbType === "mysql" ? "bg-neutral-600" : ""
+              }`}
+            >
+              <SiMariadb size={40} />
             </button>
           </div>
         </div>

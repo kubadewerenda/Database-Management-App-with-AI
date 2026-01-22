@@ -24,8 +24,8 @@ const ProjectEditPopup = ({
   onProjectDeleted,
   onProjectUpdated,
 }: ProjectEditPopupProps) => {
-  const [newName, setNewName] = useState("");
-  const [newDesc, setNewDesc] = useState("");
+  const [newName, setNewName] = useState(modalProject.name);
+  const [newDesc, setNewDesc] = useState(modalProject.description || "");
 
   const handleDelete = async () => {
     try {

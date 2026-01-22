@@ -33,10 +33,13 @@ const SavedQueries = ({ projectId }: SavedQueriesProps) => {
       setLoading(true);
       setError("");
       try {
+        console.log("Fetching queries with tag:", selectedTag);
         const data = await listSavedQueries(projectId, {
           tag: selectedTag || undefined,
         });
+        console.log("Received data:", data);
         const rows = (data as { sQueries?: SavedQueryItem[] })?.sQueries ?? [];
+        console.log("Queries:", rows);
         setQueries(rows);
       } catch (err) {
         const message =
@@ -60,26 +63,30 @@ const SavedQueries = ({ projectId }: SavedQueriesProps) => {
       }
       try {
         const data = await listSavedQueryTags(projectId);
+
+        // Normalizujemy odpowiedź API: wspieramy zarówno obiekty { id, name }, jak i zwykłe stringi
         const maybeArray = Array.isArray(data)
           ? data
-          : (data as { tags?: { id: number; name: string }[] })?.tags ??
-            Object.values(data as Record<string, unknown>).filter(
-              (item): item is { id: number; name: string } =>
-                item !== null && typeof item === "object" && "name" in item
-            );
+          : (data as { tags?: Array<{ id: number; name: string } | string> })
+              ?.tags ?? Object.values(data as Record<string, unknown>);
 
-        const normalized = (Array.isArray(maybeArray) ? maybeArray : []).filter(
-          (t): t is { id: number; name: string } =>
-            t && typeof t === "object" && "name" in t
-        );
+        const normalized = (Array.isArray(maybeArray) ? maybeArray : [])
+          .map((item, idx) => {
+            if (typeof item === "string") return { id: idx, name: item };
+            if (item && typeof item === "object" && "name" in item) return item;
+            return null;
+          })
+          .filter((t): t is { id: number; name: string } => Boolean(t));
 
         const deduped = Array.from(
           new Map(normalized.map((t) => [t.name, t])).values()
         );
 
+        console.log("Available tags:", deduped);
         setTags(deduped ?? []);
-      } catch {
-        // keep silent; 
+      } catch (err) {
+        console.error("Failed to fetch tags", err);
+        setTags([]);
       }
     };
 
@@ -151,10 +158,11 @@ const SavedQueries = ({ projectId }: SavedQueriesProps) => {
                 )}
               </div>
             </div>
-            {query.tags && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {Array.isArray(query.tags) &&
-                  query.tags.map((tag, idx) => {
+            {query.tags &&
+              Array.isArray(query.tags) &&
+              query.tags.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {query.tags.map((tag, idx) => {
                     const label = typeof tag === "string" ? tag : tag?.name;
                     return (
                       <span
@@ -165,8 +173,8 @@ const SavedQueries = ({ projectId }: SavedQueriesProps) => {
                       </span>
                     );
                   })}
-              </div>
-            )}
+                </div>
+              )}
             {query.sql && (
               <pre className="mt-2 max-h-24 overflow-y-auto rounded-lg bg-neutral-900/80 p-2 text-[11px] text-neutral-200 whitespace-pre-wrap border border-neutral-700">
                 {query.sql}

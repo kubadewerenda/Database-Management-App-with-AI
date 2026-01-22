@@ -46,7 +46,8 @@ export const registerUser = async (
 
   return {
     message:
-      (data as { message?: string }).message ?? "User registered successfully.",
+      (data as { message?: string }).message ??
+      "Użytkownik zalogowany pomyślnie.",
   };
 };
 
