@@ -36,23 +36,41 @@ export const updateProjectData = async (
   projectDescription: string
 ) => {
   try {
+    console.log("Sending update:", {
+      projectId,
+      projectName,
+      projectDescription,
+    });
+
+    const body: { name: string; description?: string } = {
+      name: projectName,
+    };
+
+    if (projectDescription && projectDescription.trim()) {
+      body.description = projectDescription;
+    }
+
     const response = await fetch(`${API_URL}/project/${projectId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify({
-        name: projectName,
-        description: projectDescription,
-      }),
+      body: JSON.stringify(body),
     });
     if (!response.ok) {
-      throw new Error("Failed to update project data");
+      const errorData = await response.json().catch(() => null);
+      console.error("Server response:", response.status, errorData);
+      console.error("Validation details:", errorData?.details);
+      throw new Error(
+        errorData?.message ||
+          `Failed to update project data: ${response.status}`
+      );
     }
 
     const data = await response.json();
     console.log(data);
+    return data;
   } catch (error) {
     console.error(error);
     throw error instanceof Error

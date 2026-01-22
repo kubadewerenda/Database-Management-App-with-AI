@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import { FaKey, FaTable } from "react-icons/fa";
 import Chat from "./Chat";
-import { BsSearch } from "react-icons/bs";
 import { HiOutlineEye } from "react-icons/hi2";
 import { HiOutlineEyeSlash } from "react-icons/hi2";
 import { PuffLoader } from "react-spinners";
@@ -76,15 +75,6 @@ const ResizableDetails = ({
           </div>
 
           <div className="flex gap-6 items-center">
-            <div className="flex items-center gap-2">
-              <BsSearch className="text-neutral-500" />
-              <input
-                type="text"
-                placeholder="Tabela ..."
-                className="outline-none border h-[25px] border-neutral-500/40 bg-neutral-800/80 rounded-2xl px-3 py-1 focus:neutral-orange-400/60 focus:ring-2 focus:ring-neutral-400/40 transition text-neutral-300 w-[180px] text-sm"
-              />
-            </div>
-
             {showTablesDetails ? (
               <button onClick={() => setShowTablesDetails((prev) => !prev)}>
                 <HiOutlineEyeSlash

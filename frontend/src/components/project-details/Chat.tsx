@@ -2,8 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { chatHistory, sendMessage } from "../../api/projectDetailsApi";
 import { FaBackward } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
-import { MdAutorenew } from "react-icons/md";
-import { RiDownloadFill } from "react-icons/ri";
 import { CiSaveDown2 } from "react-icons/ci";
 import SavedQueryPopup from "../settings-components/SavedQueryPopup";
 
@@ -159,10 +157,6 @@ const Chat = ({ projectId, chatId }: ChatProps) => {
         />
       )}
       <section className="flex items-center justify-between py-1 px-6">
-        <div className="flex items-center gap-6 ">
-          <MdAutorenew size={18} className="text-neutral-400" />
-          <RiDownloadFill size={18} className="text-neutral-400" />
-        </div>
         <button
           type="button"
           onClick={() => navigate(-1)}
